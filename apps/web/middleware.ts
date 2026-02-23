@@ -1,19 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+
+type CookieLike = { name: string; value: string; options?: Record<string, unknown> };
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "orghub.app";
 
+/** Paths that don't require authentication */
+const PUBLIC_PATHS = new Set(["/login", "/auth/callback", "/auth/signout"]);
+
 /**
- * Subdomain-based multi-tenant routing.
+ * Subdomain-based multi-tenant routing + auth protection.
  *
  * Production:  elks-672.orghub.app/dashboard  → /[orgSlug]/dashboard
- * Custom domain: members.myorg.org/dashboard  → /[orgSlug]/dashboard (via x-org-slug header set by Vercel)
  * Dev:          localhost:3000?org=elks-672    → /[orgSlug]/dashboard
  */
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const hostname = request.headers.get("host") ?? "";
 
-  // Static assets and Next internals — pass through unchanged
+  // Static assets and Next internals — pass through
   if (
     url.pathname.startsWith("/_next") ||
     url.pathname.startsWith("/api/") ||
@@ -26,48 +31,82 @@ export function middleware(request: NextRequest) {
   let orgSlug: string | null = null;
 
   if (process.env.NODE_ENV === "development") {
-    // Dev: use ?org=slug query param
     orgSlug = url.searchParams.get("org");
   }
 
-  // Production subdomain: elks-672.orghub.app
   if (!orgSlug && hostname.endsWith(`.${ROOT_DOMAIN}`)) {
     orgSlug = hostname.replace(`.${ROOT_DOMAIN}`, "");
   }
 
-  // Custom domain: pass org slug via Vercel edge config header
   if (!orgSlug) {
     orgSlug = request.headers.get("x-org-slug");
   }
 
   if (!orgSlug || orgSlug === "www") {
-    // Root domain — redirect to marketing site
     return NextResponse.redirect(new URL(`https://www.${ROOT_DOMAIN}`));
   }
 
-  // Rewrite path: /dashboard → /[orgSlug]/dashboard
+  // --- Auth check (skip for public paths) ---
+  const isPublicPath = PUBLIC_PATHS.has(url.pathname);
+
+  // Set up a mutable response for Supabase to write session cookies into
+  let response = NextResponse.next({ request });
+
+  if (!isPublicPath) {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet: CookieLike[]) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            response = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              response.cookies.set(name, value, options as any)
+            );
+          },
+        },
+      }
+    );
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      // Redirect to login, preserving org context
+      const loginUrl = new URL(request.url);
+      loginUrl.pathname = "/login";
+      if (process.env.NODE_ENV === "development") {
+        loginUrl.searchParams.set("org", orgSlug);
+      }
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  // --- Rewrite path to [orgSlug]/... ---
   const originalPath = url.pathname === "/" ? "/dashboard" : url.pathname;
   url.pathname = `/${orgSlug}${originalPath}`;
-
-  // Remove the ?org= param from the rewritten URL
   url.searchParams.delete("org");
 
-  const response = NextResponse.rewrite(url);
+  const rewriteResponse = NextResponse.rewrite(url, { request });
 
-  // Pass org slug downstream to server components via header
-  response.headers.set("x-org-slug", orgSlug);
+  // Copy any session cookies the Supabase client set
+  response.cookies.getAll().forEach(({ name, value, ...options }) => {
+    rewriteResponse.cookies.set(name, value, options);
+  });
 
-  return response;
+  rewriteResponse.headers.set("x-org-slug", orgSlug);
+
+  return rewriteResponse;
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization)
-     * - favicon.ico
-     */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
