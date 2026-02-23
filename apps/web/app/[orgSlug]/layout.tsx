@@ -17,6 +17,8 @@ export default async function OrgLayout({ children, params }: Props) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const orgRole = user?.app_metadata?.org_role as string | undefined;
+  const isAdmin = orgRole === "admin" || orgRole === "board";
 
   const navLinks = [
     { href: `/${orgSlug}/events`, label: "Events", show: org.features.events },
@@ -58,6 +60,15 @@ export default async function OrgLayout({ children, params }: Props) {
         </a>
 
         <div style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}>
+          {isAdmin && (
+            <a href={`/${orgSlug}/admin`} style={{
+              padding: "0.4rem 0.75rem", borderRadius: "6px",
+              fontSize: "0.875rem", fontWeight: 600,
+              color: "var(--org-primary, #3b82f6)", textDecoration: "none",
+            }}>
+              Admin
+            </a>
+          )}
           {navLinks.map((link) => (
             <a
               key={link.href}
