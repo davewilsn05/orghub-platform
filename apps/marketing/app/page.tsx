@@ -9,6 +9,7 @@ export default function HomePage() {
       <OrgTypes />
       <DashboardMockup />
       <Features />
+      <AiSpotlight />
       <HowItWorks appUrl={APP_URL} />
       <Pricing appUrl={APP_URL} />
       <Faq />
@@ -79,11 +80,12 @@ function Hero({ appUrl }: { appUrl: string }) {
       </h1>
 
       <p style={{
-        fontSize: "1.2rem", color: "#8a8a8a", maxWidth: "580px",
+        fontSize: "1.2rem", color: "#8a8a8a", maxWidth: "600px",
         margin: "0 auto 2.75rem", lineHeight: 1.65,
       }}>
-        Events, committees, newsletters, and messaging — all in one
-        branded portal. Each organization gets their own subdomain in minutes.
+        Events, committees, newsletters, and messaging — plus an{" "}
+        <span style={{ color: "#a78bfa", fontWeight: 600 }}>AI admin assistant</span>{" "}
+        that helps you write it all. Each org gets a fully branded portal in minutes.
       </p>
 
       <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap", marginBottom: "1.5rem" }}>
@@ -170,7 +172,7 @@ function DashboardMockup() {
         </div>
 
         {/* Mock portal UI */}
-        <div style={{ display: "flex", minHeight: "380px" }}>
+        <div style={{ display: "flex", minHeight: "380px", position: "relative" }}>
           {/* Sidebar */}
           <div style={{
             width: "180px", background: "#0a0a0a", borderRight: "1px solid #191919",
@@ -237,9 +239,40 @@ function DashboardMockup() {
             ))}
           </div>
         </div>
+
+        {/* AI assistant floating widget (admin-only) */}
+        <div style={{
+          position: "absolute", bottom: "1.25rem", right: "1.25rem",
+          display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.5rem",
+        }}>
+          <div style={{
+            background: "#1a1a2e", border: "1px solid #312e81",
+            borderRadius: "12px", padding: "0.75rem 1rem", width: "200px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+          }}>
+            <div style={{ fontSize: "0.65rem", color: "#818cf8", fontWeight: 700, marginBottom: "0.35rem" }}>✦ AI Assistant</div>
+            <div style={{ fontSize: "0.65rem", color: "#555", lineHeight: 1.5 }}>
+              "Draft an announcement for the March scholarship dinner…"
+            </div>
+            <div style={{
+              marginTop: "0.5rem", background: "#312e81", borderRadius: "6px",
+              padding: "0.25rem 0.5rem", fontSize: "0.6rem", color: "#a5b4fc",
+            }}>
+              Sure! Here's a draft: The Pasadena Elks Lodge #672 is pleased to invite…
+            </div>
+          </div>
+          <div style={{
+            background: "#4f46e5", color: "#fff", borderRadius: "999px",
+            padding: "0.45rem 0.9rem", fontSize: "0.7rem", fontWeight: 700,
+            display: "flex", alignItems: "center", gap: "0.3rem",
+            boxShadow: "0 4px 12px rgba(79,70,229,0.4)",
+          }}>
+            <span>✦</span> Assistant
+          </div>
+        </div>
       </div>
       <p style={{ textAlign: "center", color: "#333", fontSize: "0.8rem", marginTop: "1.25rem" }}>
-        Every organization gets a portal like this — fully branded with their own colors and logo.
+        Every organization gets a portal like this — fully branded, with an AI assistant built in for admins.
       </p>
     </section>
   );
@@ -257,13 +290,17 @@ function Features() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))", gap: "1.1rem" }}>
         {FEATURES.map((f) => (
           <div key={f.title} style={{
-            background: "#0c0c0c", border: "1px solid #191919",
+            background: f.highlight ? "#13102b" : "#0c0c0c",
+            border: `1px solid ${f.highlight ? "#4f46e5" : "#191919"}`,
             borderRadius: "14px", padding: "1.5rem",
             transition: "border-color 0.2s",
           }}>
-            <div style={{ fontSize: "1.8rem", marginBottom: "0.75rem" }}>{f.icon}</div>
-            <div style={{ fontWeight: 700, marginBottom: "0.4rem", fontSize: "0.95rem" }}>{f.title}</div>
-            <div style={{ color: "#666", fontSize: "0.875rem", lineHeight: 1.55 }}>{f.desc}</div>
+            <div style={{ fontSize: f.highlight ? "1.4rem" : "1.8rem", marginBottom: "0.75rem", color: f.highlight ? "#818cf8" : "inherit" }}>{f.icon}</div>
+            <div style={{ fontWeight: 700, marginBottom: "0.4rem", fontSize: "0.95rem", color: f.highlight ? "#c4b5fd" : "inherit" }}>
+              {f.title}
+              {f.highlight && <span style={{ marginLeft: "0.5rem", fontSize: "0.65rem", background: "#312e81", color: "#a5b4fc", borderRadius: "999px", padding: "0.15rem 0.5rem", fontWeight: 700, verticalAlign: "middle" }}>New</span>}
+            </div>
+            <div style={{ color: f.highlight ? "#7c6fb0" : "#666", fontSize: "0.875rem", lineHeight: 1.55 }}>{f.desc}</div>
           </div>
         ))}
       </div>
@@ -323,6 +360,120 @@ function HowItWorks({ appUrl }: { appUrl: string }) {
         <a href={`${appUrl}/register`} style={{ ...btnPrimary, display: "inline-block", marginTop: "3rem", padding: "0.9rem 2rem" }}>
           Create your portal now →
         </a>
+      </div>
+    </section>
+  );
+}
+
+/* ─── AI Spotlight ──────────────────────────────────────────────────── */
+
+function AiSpotlight() {
+  const capabilities = [
+    { icon: "✉️", label: "Draft event announcements", desc: "Describe your event and get a polished member-ready announcement in seconds." },
+    { icon: "📰", label: "Write newsletter copy", desc: "Generate newsletter intros, recaps, and closing remarks from a quick prompt." },
+    { icon: "🗣️", label: "Craft member communications", desc: "Write formal notices, reminders, or welcoming messages with the right tone for your org." },
+    { icon: "📋", label: "Summarize meeting notes", desc: "Paste your raw notes and get a clean summary ready to share with members." },
+  ];
+
+  return (
+    <section style={{
+      padding: "5rem 2rem",
+      borderTop: "1px solid #141414",
+      borderBottom: "1px solid #141414",
+      background: "linear-gradient(180deg, #050505 0%, #090613 50%, #050505 100%)",
+    }}>
+      <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: "0.5rem",
+            background: "#13102b", color: "#a78bfa",
+            borderRadius: "999px", padding: "0.4rem 1.1rem", fontSize: "0.8rem",
+            fontWeight: 700, letterSpacing: "0.04em", marginBottom: "1.5rem",
+            border: "1px solid #312e81",
+          }}>
+            <span style={{ color: "#818cf8" }}>✦</span>
+            AI-powered admin tools
+          </div>
+          <h2 style={{ ...sectionHeading, maxWidth: "640px", margin: "0 auto 1rem" }}>
+            Your org's work just got a lot{" "}
+            <span style={{ color: "#a78bfa" }}>faster</span>
+          </h2>
+          <p style={{ ...sectionSubtext, maxWidth: "540px", margin: "0 auto" }}>
+            Every OrgHub portal includes a built-in AI admin assistant — a floating chat widget that lives in your admin dashboard and helps you create content in seconds.
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem", marginBottom: "3.5rem" }}>
+          {capabilities.map(({ icon, label, desc }) => (
+            <div key={label} style={{
+              background: "#0d0b1a", border: "1px solid #1e1a3a",
+              borderRadius: "14px", padding: "1.5rem",
+            }}>
+              <div style={{ fontSize: "1.5rem", marginBottom: "0.75rem" }}>{icon}</div>
+              <div style={{ fontWeight: 700, fontSize: "0.9rem", marginBottom: "0.4rem", color: "#e0d9ff" }}>{label}</div>
+              <div style={{ color: "#5c5278", fontSize: "0.82rem", lineHeight: 1.6 }}>{desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Chat demo mockup */}
+        <div style={{
+          maxWidth: "540px", margin: "0 auto",
+          background: "#0d0b1a", border: "1px solid #2d2560",
+          borderRadius: "18px", overflow: "hidden",
+          boxShadow: "0 20px 60px rgba(79,70,229,0.15)",
+        }}>
+          {/* Header */}
+          <div style={{
+            padding: "0.75rem 1.25rem",
+            borderBottom: "1px solid #1e1a3a",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            background: "#110e24",
+          }}>
+            <div>
+              <span style={{ fontWeight: 700, fontSize: "0.85rem", color: "#e0d9ff" }}>✦ Assistant</span>
+              <span style={{ fontSize: "0.7rem", color: "#6d5e9c", marginLeft: "0.5rem" }}>Admin only</span>
+            </div>
+            <span style={{ color: "#4a3f6b", fontSize: "0.9rem", cursor: "pointer" }}>✕</span>
+          </div>
+          {/* Messages */}
+          <div style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <div style={{ alignSelf: "flex-end", background: "#312e81", color: "#e0d9ff", borderRadius: "12px 12px 2px 12px", padding: "0.6rem 0.9rem", fontSize: "0.8rem", maxWidth: "85%" }}>
+              Write a short announcement for our Scholarship Dinner on March 21st at 6pm in the Banquet Room.
+            </div>
+            <div style={{ alignSelf: "flex-start", background: "#1a1635", color: "#b8aee0", borderRadius: "12px 12px 12px 2px", padding: "0.6rem 0.9rem", fontSize: "0.8rem", maxWidth: "90%", lineHeight: 1.6 }}>
+              <span style={{ color: "#818cf8", fontWeight: 700 }}>✦</span>{"  "}
+              You're invited to the <strong style={{ color: "#e0d9ff" }}>Annual Scholarship Dinner</strong> hosted by Pasadena Elks Lodge #672 — Friday, March 21st at 6:00 PM in the Banquet Room. Join us for an evening honoring our scholarship recipients and celebrating our community's commitment to education. RSVP in the portal by March 15th.
+            </div>
+            <div style={{ alignSelf: "flex-end", background: "#312e81", color: "#e0d9ff", borderRadius: "12px 12px 2px 12px", padding: "0.6rem 0.9rem", fontSize: "0.8rem", maxWidth: "85%" }}>
+              Make it a bit more casual.
+            </div>
+            <div style={{ alignSelf: "flex-start", background: "#1a1635", color: "#b8aee0", borderRadius: "12px 12px 12px 2px", padding: "0.6rem 0.9rem", fontSize: "0.8rem", maxWidth: "90%", lineHeight: 1.6 }}>
+              <span style={{ color: "#818cf8", fontWeight: 700 }}>✦</span>{"  "}
+              Hey everyone — our <strong style={{ color: "#e0d9ff" }}>Scholarship Dinner</strong> is coming up on Friday, March 21st at 6 PM in the Banquet Room. Come celebrate the amazing students we're supporting this year. RSVP in the portal by March 15th — hope to see you there!
+            </div>
+          </div>
+          {/* Input */}
+          <div style={{
+            padding: "0.75rem 1.25rem",
+            borderTop: "1px solid #1e1a3a",
+            display: "flex", gap: "0.5rem",
+          }}>
+            <div style={{
+              flex: 1, background: "#1a1635", borderRadius: "8px",
+              padding: "0.55rem 0.75rem", fontSize: "0.8rem", color: "#4a3f6b",
+            }}>Ask me anything about your org…</div>
+            <div style={{
+              background: "#4f46e5", color: "#fff", borderRadius: "8px",
+              padding: "0.55rem 0.75rem", fontSize: "0.8rem", fontWeight: 700,
+              cursor: "pointer",
+            }}>↑</div>
+          </div>
+        </div>
+
+        <p style={{ textAlign: "center", color: "#3a3560", fontSize: "0.8rem", marginTop: "1.5rem" }}>
+          Admin-only · Powered by OpenAI · Available on all plans
+        </p>
       </div>
     </section>
   );
@@ -519,6 +670,7 @@ const sectionSubtext: React.CSSProperties = {
 /* ─── Data ──────────────────────────────────────────────────────────── */
 
 const FEATURES = [
+  { icon: "✦", title: "AI Admin Assistant", desc: "A floating AI assistant in the admin dashboard helps you draft event announcements, newsletters, and member communications in seconds.", highlight: true },
   { icon: "📅", title: "Events & RSVPs", desc: "Event pages with RSVP tracking, ICS calendar downloads, and a full calendar grid view." },
   { icon: "🏛️", title: "Committee Management", desc: "Committee pages with goals, membership rosters, meeting minutes, and dedicated calendars." },
   { icon: "📰", title: "Newsletters", desc: "Rich-text editor, draft/publish workflow, and one-click email blast to all active members." },
@@ -546,6 +698,7 @@ const PLANS = [
       "Unlimited members",
       "All features included",
       "Your own Supabase project",
+      "AI assistant (bring your own OpenAI key)",
       "MIT licensed",
       "Community support",
     ],
@@ -562,6 +715,7 @@ const PLANS = [
       "Subdomain included",
       "Managed Supabase + backups",
       "Email via SendGrid",
+      "AI assistant included",
       "Automatic updates",
       "Priority support",
     ],
@@ -578,6 +732,7 @@ const PLANS = [
       "Unlimited orgs",
       "Centralized admin",
       "Shared member pool",
+      "AI assistant for all orgs",
       "Custom domain",
       "Dedicated support",
     ],
@@ -604,5 +759,9 @@ const FAQS = [
   {
     q: "Is it really open source?",
     a: "Yes, 100% MIT licensed. Fork it, modify it, self-host it. The entire codebase is on GitHub.",
+  },
+  {
+    q: "What can the AI admin assistant do?",
+    a: "The built-in AI assistant helps org admins draft event announcements, newsletters, member communications, meeting summaries, and more. It lives as a floating chat widget in your admin dashboard — only admins can access it. On the self-hosted plan you supply your own OpenAI API key; on the Managed plan it's fully included.",
   },
 ];
