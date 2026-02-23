@@ -54,6 +54,10 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!orgSlug || orgSlug === "www") {
+    // In dev, redirect to /register so localhost:3000 is useful without ?org=
+    if (process.env.NODE_ENV === "development") {
+      return NextResponse.redirect(new URL("/register", request.url));
+    }
     return NextResponse.redirect(new URL(`https://www.${ROOT_DOMAIN}`));
   }
 
