@@ -67,7 +67,7 @@ function Hero({ appUrl }: { appUrl: string }) {
         border: "1px solid #1e3a5f",
       }}>
         <span style={{ background: "#3b82f6", borderRadius: "50%", width: "6px", height: "6px", display: "inline-block" }} />
-        Open source · MIT licensed · Self-hostable
+        Open source · Self-hostable
       </div>
 
       <h1 style={{
@@ -621,7 +621,7 @@ function Footer() {
         Org<span style={{ color: "#3b82f6" }}>Hub</span>
       </span>
       <p style={{ color: "#333", fontSize: "0.82rem", margin: 0 }}>
-        MIT licensed · Built with Next.js + Supabase
+        Built with Next.js + Supabase
       </p>
       <div style={{ display: "flex", gap: "1.5rem" }}>
         <a href="https://github.com/davewilsn05/orghub-platform" target="_blank" rel="noopener noreferrer" style={{ color: "#444", fontSize: "0.82rem", textDecoration: "none" }}>GitHub</a>
@@ -757,7 +757,7 @@ const FAQS = [
   },
   {
     q: "Is it really open source?",
-    a: "Yes, 100% MIT licensed. Fork it, modify it, self-host it. The entire codebase is on GitHub.",
+    a: "Yes. Fork it, modify it, self-host it. The entire codebase is on GitHub.",
   },
   {
     q: "What can the AI admin assistant do?",
