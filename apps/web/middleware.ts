@@ -6,7 +6,7 @@ type CookieLike = { name: string; value: string; options?: Record<string, unknow
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "orghub.app";
 
 /** Paths that don't require authentication */
-const PUBLIC_PATHS = new Set(["/login", "/auth/callback", "/auth/signout"]);
+const PUBLIC_PATHS = new Set(["/login", "/auth/callback", "/auth/signout", "/join"]);
 
 /**
  * Top-level paths that bypass org-slug routing entirely.

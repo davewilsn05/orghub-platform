@@ -15,3 +15,4 @@ export type NewsletterRow = Tables["newsletters"]["Row"];
 export type VolunteerSlotRow = Tables["volunteer_slots"]["Row"];
 export type VolunteerSignupRow = Tables["volunteer_signups"]["Row"];
 export type DocumentRow = Tables["documents"]["Row"];
+export type InviteRow = Tables["invites"]["Row"];
