@@ -9,6 +9,12 @@ const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "orghub.app";
 const PUBLIC_PATHS = new Set(["/login", "/auth/callback", "/auth/signout"]);
 
 /**
+ * Top-level paths that bypass org-slug routing entirely.
+ * These are platform-level pages (registration, marketing redirects).
+ */
+const PLATFORM_PATHS = new Set(["/register"]);
+
+/**
  * Subdomain-based multi-tenant routing + auth protection.
  *
  * Production:  elks-672.orghub.app/dashboard  → /[orgSlug]/dashboard
@@ -40,6 +46,11 @@ export async function middleware(request: NextRequest) {
 
   if (!orgSlug) {
     orgSlug = request.headers.get("x-org-slug");
+  }
+
+  // Platform-level paths (e.g. /register) work without an org slug
+  if (PLATFORM_PATHS.has(url.pathname)) {
+    return NextResponse.next();
   }
 
   if (!orgSlug || orgSlug === "www") {

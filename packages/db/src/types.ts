@@ -1,328 +1,830 @@
-/**
- * Generated database type definitions for OrgHub multi-tenant schema.
- * These mirror the Supabase migrations in /supabase/migrations/.
- *
- * Run `supabase gen types typescript` to regenerate from a live DB.
- */
-
 export type Json =
   | string
   | number
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[];
+  | Json[]
 
-export interface Database {
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.1"
+  }
   public: {
     Tables: {
-      organizations: {
-        Row: {
-          id: string;
-          slug: string;
-          name: string;
-          plan: "free" | "managed" | "network";
-          primary_color: string | null;
-          secondary_color: string | null;
-          logo_url: string | null;
-          favicon_url: string | null;
-          feature_events: boolean;
-          feature_committees: boolean;
-          feature_newsletters: boolean;
-          feature_messaging: boolean;
-          feature_volunteers: boolean;
-          feature_zoom: boolean;
-          feature_documents: boolean;
-          feature_member_directory: boolean;
-          custom_domain: string | null;
-          billing_email: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<
-          Database["public"]["Tables"]["organizations"]["Row"],
-          "id" | "created_at" | "updated_at"
-        > &
-          Partial<
-            Pick<
-              Database["public"]["Tables"]["organizations"]["Row"],
-              "id" | "created_at" | "updated_at"
-            >
-          >;
-        Update: Partial<Database["public"]["Tables"]["organizations"]["Row"]>;
-      };
-
-      profiles: {
-        Row: {
-          id: string;
-          org_id: string;
-          email: string;
-          full_name: string | null;
-          role: "member" | "committee_chair" | "board" | "admin";
-          phone: string | null;
-          avatar_url: string | null;
-          is_active: boolean;
-          joined_at: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<
-          Database["public"]["Tables"]["profiles"]["Row"],
-          "created_at" | "updated_at"
-        > &
-          Partial<
-            Pick<
-              Database["public"]["Tables"]["profiles"]["Row"],
-              "created_at" | "updated_at"
-            >
-          >;
-        Update: Partial<Database["public"]["Tables"]["profiles"]["Row"]>;
-      };
-
-      events: {
-        Row: {
-          id: string;
-          org_id: string;
-          title: string;
-          slug: string;
-          description: string | null;
-          location: string | null;
-          start: string;
-          end: string | null;
-          all_day: boolean;
-          category: string | null;
-          image_url: string | null;
-          is_published: boolean;
-          rsvp_enabled: boolean;
-          rsvp_limit: number | null;
-          is_zoom_meeting: boolean;
-          zoom_url: string | null;
-          zoom_meeting_id: string | null;
-          zoom_passcode: string | null;
-          created_by: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<
-          Database["public"]["Tables"]["events"]["Row"],
-          "id" | "created_at" | "updated_at"
-        > &
-          Partial<
-            Pick<
-              Database["public"]["Tables"]["events"]["Row"],
-              "id" | "created_at" | "updated_at"
-            >
-          >;
-        Update: Partial<Database["public"]["Tables"]["events"]["Row"]>;
-      };
-
-      event_rsvps: {
-        Row: {
-          id: string;
-          org_id: string;
-          event_id: string;
-          profile_id: string;
-          status: "attending" | "not_attending" | "maybe";
-          created_at: string;
-        };
-        Insert: Omit<
-          Database["public"]["Tables"]["event_rsvps"]["Row"],
-          "id" | "created_at"
-        > &
-          Partial<Pick<Database["public"]["Tables"]["event_rsvps"]["Row"], "id" | "created_at">>;
-        Update: Partial<Database["public"]["Tables"]["event_rsvps"]["Row"]>;
-      };
-
-      committees: {
-        Row: {
-          id: string;
-          org_id: string;
-          name: string;
-          slug: string;
-          description: string | null;
-          chair_profile_id: string | null;
-          is_active: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<
-          Database["public"]["Tables"]["committees"]["Row"],
-          "id" | "created_at" | "updated_at"
-        > &
-          Partial<
-            Pick<
-              Database["public"]["Tables"]["committees"]["Row"],
-              "id" | "created_at" | "updated_at"
-            >
-          >;
-        Update: Partial<Database["public"]["Tables"]["committees"]["Row"]>;
-      };
-
       committee_members: {
         Row: {
-          id: string;
-          org_id: string;
-          committee_id: string;
-          profile_id: string;
-          role: "chair" | "member";
-          joined_at: string;
-        };
-        Insert: Omit<
-          Database["public"]["Tables"]["committee_members"]["Row"],
-          "id" | "joined_at"
-        > &
-          Partial<Pick<Database["public"]["Tables"]["committee_members"]["Row"], "id" | "joined_at">>;
-        Update: Partial<Database["public"]["Tables"]["committee_members"]["Row"]>;
-      };
-
-      messages: {
+          committee_id: string
+          id: string
+          joined_at: string
+          org_id: string
+          profile_id: string
+          role: string
+        }
+        Insert: {
+          committee_id: string
+          id?: string
+          joined_at?: string
+          org_id: string
+          profile_id: string
+          role?: string
+        }
+        Update: {
+          committee_id?: string
+          id?: string
+          joined_at?: string
+          org_id?: string
+          profile_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "committee_members_committee_id_fkey"
+            columns: ["committee_id"]
+            isOneToOne: false
+            referencedRelation: "committees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "committee_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "committee_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      committees: {
         Row: {
-          id: string;
-          org_id: string;
-          subject: string;
-          body: string;
-          sender_id: string | null;
-          audience: "all" | "board" | "committee" | "individual";
-          audience_ref: string | null;
-          sent_at: string | null;
-          created_at: string;
-        };
-        Insert: Omit<
-          Database["public"]["Tables"]["messages"]["Row"],
-          "id" | "created_at"
-        > &
-          Partial<Pick<Database["public"]["Tables"]["messages"]["Row"], "id" | "created_at">>;
-        Update: Partial<Database["public"]["Tables"]["messages"]["Row"]>;
-      };
-
-      message_recipients: {
-        Row: {
-          id: string;
-          org_id: string;
-          message_id: string;
-          profile_id: string;
-          is_read: boolean;
-          is_archived: boolean;
-          read_at: string | null;
-        };
-        Insert: Omit<
-          Database["public"]["Tables"]["message_recipients"]["Row"],
-          "id"
-        > &
-          Partial<Pick<Database["public"]["Tables"]["message_recipients"]["Row"], "id">>;
-        Update: Partial<Database["public"]["Tables"]["message_recipients"]["Row"]>;
-      };
-
-      newsletters: {
-        Row: {
-          id: string;
-          org_id: string;
-          title: string;
-          slug: string;
-          content: Json;
-          status: "draft" | "published" | "sent";
-          published_at: string | null;
-          sent_at: string | null;
-          created_by: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: Omit<
-          Database["public"]["Tables"]["newsletters"]["Row"],
-          "id" | "created_at" | "updated_at"
-        > &
-          Partial<
-            Pick<
-              Database["public"]["Tables"]["newsletters"]["Row"],
-              "id" | "created_at" | "updated_at"
-            >
-          >;
-        Update: Partial<Database["public"]["Tables"]["newsletters"]["Row"]>;
-      };
-
-      volunteer_slots: {
-        Row: {
-          id: string;
-          org_id: string;
-          event_id: string | null;
-          title: string;
-          description: string | null;
-          date: string | null;
-          spots_total: number;
-          spots_filled: number;
-          created_at: string;
-        };
-        Insert: Omit<
-          Database["public"]["Tables"]["volunteer_slots"]["Row"],
-          "id" | "created_at"
-        > &
-          Partial<Pick<Database["public"]["Tables"]["volunteer_slots"]["Row"], "id" | "created_at">>;
-        Update: Partial<Database["public"]["Tables"]["volunteer_slots"]["Row"]>;
-      };
-
-      volunteer_signups: {
-        Row: {
-          id: string;
-          org_id: string;
-          slot_id: string;
-          profile_id: string;
-          signed_up_at: string;
-          checked_in_at: string | null;
-        };
-        Insert: Omit<
-          Database["public"]["Tables"]["volunteer_signups"]["Row"],
-          "id" | "signed_up_at"
-        > &
-          Partial<
-            Pick<
-              Database["public"]["Tables"]["volunteer_signups"]["Row"],
-              "id" | "signed_up_at"
-            >
-          >;
-        Update: Partial<Database["public"]["Tables"]["volunteer_signups"]["Row"]>;
-      };
-
+          chair_profile_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          chair_profile_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          chair_profile_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "committees_chair_profile_id_fkey"
+            columns: ["chair_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "committees_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
-          id: string;
-          org_id: string;
-          title: string;
-          category: string | null;
-          file_url: string;
-          file_size: number | null;
-          uploaded_by: string | null;
-          created_at: string;
-        };
-        Insert: Omit<
-          Database["public"]["Tables"]["documents"]["Row"],
-          "id" | "created_at"
-        > &
-          Partial<Pick<Database["public"]["Tables"]["documents"]["Row"], "id" | "created_at">>;
-        Update: Partial<Database["public"]["Tables"]["documents"]["Row"]>;
-      };
-    };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
+          category: string | null
+          created_at: string
+          file_size: number | null
+          file_url: string
+          id: string
+          org_id: string
+          title: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          org_id: string
+          title: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          org_id?: string
+          title?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_rsvps: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          org_id: string
+          profile_id: string
+          status: Database["public"]["Enums"]["rsvp_status"]
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          org_id: string
+          profile_id: string
+          status?: Database["public"]["Enums"]["rsvp_status"]
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          org_id?: string
+          profile_id?: string
+          status?: Database["public"]["Enums"]["rsvp_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_rsvps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_rsvps_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_rsvps_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          all_day: boolean
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end: string | null
+          id: string
+          image_url: string | null
+          is_published: boolean
+          is_zoom_meeting: boolean
+          location: string | null
+          org_id: string
+          rsvp_enabled: boolean
+          rsvp_limit: number | null
+          slug: string
+          start: string
+          title: string
+          updated_at: string
+          zoom_meeting_id: string | null
+          zoom_passcode: string | null
+          zoom_url: string | null
+        }
+        Insert: {
+          all_day?: boolean
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          is_zoom_meeting?: boolean
+          location?: string | null
+          org_id: string
+          rsvp_enabled?: boolean
+          rsvp_limit?: number | null
+          slug: string
+          start: string
+          title: string
+          updated_at?: string
+          zoom_meeting_id?: string | null
+          zoom_passcode?: string | null
+          zoom_url?: string | null
+        }
+        Update: {
+          all_day?: boolean
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          is_zoom_meeting?: boolean
+          location?: string | null
+          org_id?: string
+          rsvp_enabled?: boolean
+          rsvp_limit?: number | null
+          slug?: string
+          start?: string
+          title?: string
+          updated_at?: string
+          zoom_meeting_id?: string | null
+          zoom_passcode?: string | null
+          zoom_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_recipients: {
+        Row: {
+          id: string
+          is_archived: boolean
+          is_read: boolean
+          message_id: string
+          org_id: string
+          profile_id: string
+          read_at: string | null
+        }
+        Insert: {
+          id?: string
+          is_archived?: boolean
+          is_read?: boolean
+          message_id: string
+          org_id: string
+          profile_id: string
+          read_at?: string | null
+        }
+        Update: {
+          id?: string
+          is_archived?: boolean
+          is_read?: boolean
+          message_id?: string
+          org_id?: string
+          profile_id?: string
+          read_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_recipients_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_recipients_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_recipients_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          audience: Database["public"]["Enums"]["message_audience"]
+          audience_ref: string | null
+          body: string
+          created_at: string
+          id: string
+          org_id: string
+          sender_id: string | null
+          sent_at: string | null
+          subject: string
+        }
+        Insert: {
+          audience?: Database["public"]["Enums"]["message_audience"]
+          audience_ref?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          org_id: string
+          sender_id?: string | null
+          sent_at?: string | null
+          subject: string
+        }
+        Update: {
+          audience?: Database["public"]["Enums"]["message_audience"]
+          audience_ref?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          org_id?: string
+          sender_id?: string | null
+          sent_at?: string | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletters: {
+        Row: {
+          content: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          org_id: string
+          published_at: string | null
+          sent_at: string | null
+          slug: string
+          status: Database["public"]["Enums"]["newsletter_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id: string
+          published_at?: string | null
+          sent_at?: string | null
+          slug: string
+          status?: Database["public"]["Enums"]["newsletter_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          published_at?: string | null
+          sent_at?: string | null
+          slug?: string
+          status?: Database["public"]["Enums"]["newsletter_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletters_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletters_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          billing_email: string | null
+          created_at: string
+          custom_domain: string | null
+          favicon_url: string | null
+          feature_committees: boolean
+          feature_documents: boolean
+          feature_events: boolean
+          feature_member_directory: boolean
+          feature_messaging: boolean
+          feature_newsletters: boolean
+          feature_volunteers: boolean
+          feature_zoom: boolean
+          id: string
+          logo_url: string | null
+          name: string
+          plan: Database["public"]["Enums"]["org_plan"]
+          primary_color: string | null
+          secondary_color: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          billing_email?: string | null
+          created_at?: string
+          custom_domain?: string | null
+          favicon_url?: string | null
+          feature_committees?: boolean
+          feature_documents?: boolean
+          feature_events?: boolean
+          feature_member_directory?: boolean
+          feature_messaging?: boolean
+          feature_newsletters?: boolean
+          feature_volunteers?: boolean
+          feature_zoom?: boolean
+          id?: string
+          logo_url?: string | null
+          name: string
+          plan?: Database["public"]["Enums"]["org_plan"]
+          primary_color?: string | null
+          secondary_color?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          billing_email?: string | null
+          created_at?: string
+          custom_domain?: string | null
+          favicon_url?: string | null
+          feature_committees?: boolean
+          feature_documents?: boolean
+          feature_events?: boolean
+          feature_member_directory?: boolean
+          feature_messaging?: boolean
+          feature_newsletters?: boolean
+          feature_volunteers?: boolean
+          feature_zoom?: boolean
+          id?: string
+          logo_url?: string | null
+          name?: string
+          plan?: Database["public"]["Enums"]["org_plan"]
+          primary_color?: string | null
+          secondary_color?: string | null
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          is_active: boolean
+          joined_at: string | null
+          org_id: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          is_active?: boolean
+          joined_at?: string | null
+          org_id: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          is_active?: boolean
+          joined_at?: string | null
+          org_id?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      volunteer_signups: {
+        Row: {
+          checked_in_at: string | null
+          id: string
+          org_id: string
+          profile_id: string
+          signed_up_at: string
+          slot_id: string
+        }
+        Insert: {
+          checked_in_at?: string | null
+          id?: string
+          org_id: string
+          profile_id: string
+          signed_up_at?: string
+          slot_id: string
+        }
+        Update: {
+          checked_in_at?: string | null
+          id?: string
+          org_id?: string
+          profile_id?: string
+          signed_up_at?: string
+          slot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volunteer_signups_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "volunteer_signups_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "volunteer_signups_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "volunteer_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      volunteer_slots: {
+        Row: {
+          created_at: string
+          date: string | null
+          description: string | null
+          event_id: string | null
+          id: string
+          org_id: string
+          spots_filled: number
+          spots_total: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string | null
+          description?: string | null
+          event_id?: string | null
+          id?: string
+          org_id: string
+          spots_filled?: number
+          spots_total?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          date?: string | null
+          description?: string | null
+          event_id?: string | null
+          id?: string
+          org_id?: string
+          spots_filled?: number
+          spots_total?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "volunteer_slots_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "volunteer_slots_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      current_org_id: { Args: never; Returns: string }
+      current_org_role: { Args: never; Returns: string }
+      custom_access_token_hook: { Args: { event: Json }; Returns: Json }
+      is_admin_or_board: { Args: never; Returns: boolean }
+    }
     Enums: {
-      user_role: "member" | "committee_chair" | "board" | "admin";
-      org_plan: "free" | "managed" | "network";
-      message_audience: "all" | "board" | "committee" | "individual";
-      newsletter_status: "draft" | "published" | "sent";
-      rsvp_status: "attending" | "not_attending" | "maybe";
-    };
-  };
+      message_audience: "all" | "board" | "committee" | "individual"
+      newsletter_status: "draft" | "published" | "sent"
+      org_plan: "free" | "managed" | "network"
+      rsvp_status: "attending" | "not_attending" | "maybe"
+      user_role: "member" | "committee_chair" | "board" | "admin"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
 
-/** Shorthand row types */
-export type OrgRow = Database["public"]["Tables"]["organizations"]["Row"];
-export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
-export type EventRow = Database["public"]["Tables"]["events"]["Row"];
-export type EventRsvpRow = Database["public"]["Tables"]["event_rsvps"]["Row"];
-export type CommitteeRow = Database["public"]["Tables"]["committees"]["Row"];
-export type CommitteeMemberRow = Database["public"]["Tables"]["committee_members"]["Row"];
-export type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
-export type MessageRecipientRow = Database["public"]["Tables"]["message_recipients"]["Row"];
-export type NewsletterRow = Database["public"]["Tables"]["newsletters"]["Row"];
-export type VolunteerSlotRow = Database["public"]["Tables"]["volunteer_slots"]["Row"];
-export type VolunteerSignupRow = Database["public"]["Tables"]["volunteer_signups"]["Row"];
-export type DocumentRow = Database["public"]["Tables"]["documents"]["Row"];
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      message_audience: ["all", "board", "committee", "individual"],
+      newsletter_status: ["draft", "published", "sent"],
+      org_plan: ["free", "managed", "network"],
+      rsvp_status: ["attending", "not_attending", "maybe"],
+      user_role: ["member", "committee_chair", "board", "admin"],
+    },
+  },
+} as const
