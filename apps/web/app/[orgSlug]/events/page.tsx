@@ -80,7 +80,7 @@ function EventRow({
   orgSlug,
   upcoming = false,
 }: {
-  event: { id: string; title: string; start: string; location: string | null; category: string | null; description?: string | null; rsvp_enabled?: boolean };
+  event: { id: string; slug: string; title: string; start: string; location: string | null; category: string | null; description?: string | null; rsvp_enabled?: boolean };
   orgSlug: string;
   upcoming?: boolean;
 }) {
@@ -90,7 +90,7 @@ function EventRow({
   const time = start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 
   return (
-    <div style={{
+    <a href={`/${orgSlug}/events/${event.slug}`} style={{
       display: "flex",
       gap: "1.25rem",
       padding: "1.25rem",
@@ -98,6 +98,8 @@ function EventRow({
       border: "1px solid #e5e7eb",
       borderRadius: "12px",
       opacity: upcoming ? 1 : 0.6,
+      textDecoration: "none",
+      color: "inherit",
     }}>
       {/* Date badge */}
       <div style={{
@@ -143,6 +145,6 @@ function EventRow({
           </span>
         </div>
       )}
-    </div>
+    </a>
   );
 }

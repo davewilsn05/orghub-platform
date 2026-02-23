@@ -26,6 +26,8 @@ export default async function AdminLayout({ children, params }: Props) {
     { href: `/${orgSlug}/admin/events`, label: "Events", icon: "📅" },
     { href: `/${orgSlug}/admin/members`, label: "Members", icon: "👥" },
     { href: `/${orgSlug}/admin/invites`, label: "Invites", icon: "✉️" },
+    { href: `/${orgSlug}/admin/newsletters`, label: "Newsletters", icon: "📰" },
+    { href: `/${orgSlug}/admin/settings`, label: "Settings", icon: "⚙️" },
   ];
 
   return (

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { sendEmail, inviteEmailHtml } from "@/lib/email/send";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -59,7 +60,32 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json(invite, { status: 201 });
+  const inv = invite as { id: string; token: string; email: string; role: string; expires_at: string };
+
+  // Send invite email if SendGrid is configured
+  if (process.env.SENDGRID_API_KEY) {
+    try {
+      const { data: org } = await service.from("organizations").select("name, slug").eq("id", orgId).maybeSingle();
+      if (org) {
+        const orgData = org as { name: string; slug: string };
+        const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "orghub.app";
+        const isDev = process.env.NODE_ENV === "development";
+        const joinUrl = isDev
+          ? `http://localhost:3000/join?org=${orgData.slug}&token=${inv.token}`
+          : `https://${orgData.slug}.${ROOT_DOMAIN}/join?token=${inv.token}`;
+        await sendEmail({
+          to: inv.email,
+          subject: `You're invited to join ${orgData.name}`,
+          html: inviteEmailHtml({ orgName: orgData.name, joinUrl }),
+          fromName: orgData.name,
+        });
+      }
+    } catch {
+      // Email failed — invite was still created, link shown on screen
+    }
+  }
+
+  return NextResponse.json(inv, { status: 201 });
 }
 
 export async function GET() {
