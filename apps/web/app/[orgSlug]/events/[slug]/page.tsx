@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { loadOrgConfig } from "@/lib/org/loader";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { RsvpButton } from "./RsvpButton";
+import { TicketSection } from "./TicketSection";
 
 type Props = { params: Promise<{ orgSlug: string; slug: string }> };
 
@@ -91,6 +92,8 @@ export default async function EventDetailPage({ params }: Props) {
           </a>
         )}
       </div>
+
+      <TicketSection eventId={ev.id} />
 
       {ev.description && (
         <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem" }}>

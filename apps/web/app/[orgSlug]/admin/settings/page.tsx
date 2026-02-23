@@ -13,7 +13,7 @@ export default async function AdminSettingsPage({ params }: Props) {
 
   const { data: row } = await supabase
     .from("organizations")
-    .select("name, primary_color, secondary_color, logo_url, favicon_url, feature_events, feature_committees, feature_newsletters, feature_messaging, feature_volunteers, feature_zoom, feature_documents, feature_member_directory")
+    .select("name, primary_color, secondary_color, logo_url, favicon_url, feature_events, feature_committees, feature_newsletters, feature_messaging, feature_volunteers, feature_zoom, feature_documents, feature_member_directory, stripe_publishable_key, stripe_secret_key, stripe_webhook_secret")
     .eq("id", org.id)
     .single();
 

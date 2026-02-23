@@ -70,3 +70,73 @@ export function newsletterEmailHtml({
   </p>
 </div>`.trim();
 }
+
+export function renewalReminderEmailHtml({
+  memberName, orgName, duesPaidThrough, daysUntilExpiry, renewalUrl,
+}: {
+  memberName: string;
+  orgName: string;
+  duesPaidThrough: string;
+  daysUntilExpiry: number;
+  renewalUrl: string;
+}): string {
+  const expiryDate = new Date(duesPaidThrough + "T00:00:00").toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric",
+  });
+  const urgentColor = daysUntilExpiry <= 7 ? "#fef2f2" : "#fffbeb";
+  const urgentBorder = daysUntilExpiry <= 7 ? "#fecaca" : "#fde68a";
+  const urgentText = daysUntilExpiry <= 7 ? "#b91c1c" : "#92400e";
+  return `
+<div style="font-family: system-ui, -apple-system, sans-serif; max-width: 560px; margin: 0 auto; padding: 2rem; color: #111827;">
+  <p style="font-size: 0.8rem; color: #9ca3af; margin: 0 0 1rem; text-transform: uppercase; letter-spacing: 0.08em;">${orgName}</p>
+  <h1 style="font-size: 1.4rem; font-weight: 800; margin: 0 0 1rem;">Your membership expires in ${daysUntilExpiry} days</h1>
+  <p style="color: #6b7280; margin: 0 0 1.5rem; line-height: 1.6;">Hi ${memberName}, your ${orgName} membership expires on <strong>${expiryDate}</strong>. Renew now to keep access to member benefits.</p>
+  <div style="background: ${urgentColor}; border: 1px solid ${urgentBorder}; border-radius: 8px; padding: 0.875rem 1rem; margin-bottom: 1.5rem;">
+    <span style="color: ${urgentText}; font-weight: 600; font-size: 0.875rem;">
+      ${daysUntilExpiry <= 7 ? "⚠️ Expires soon — renew today to avoid interruption." : "🔔 Renew in the next 30 days to stay current."}
+    </span>
+  </div>
+  <a href="${renewalUrl}" style="display: inline-block; padding: 0.85rem 2rem; background: #3b82f6; color: #fff; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 1rem;">
+    Renew my membership →
+  </a>
+  <p style="color: #9ca3af; font-size: 0.8rem; margin: 2rem 0 0; line-height: 1.5;">
+    If you've already renewed, you can ignore this email.
+  </p>
+</div>`.trim();
+}
+
+export function ticketConfirmationEmailHtml({
+  memberName, orgName, eventTitle, eventDate, eventLocation,
+  ticketTypeName, quantity, amountCents, eventUrl,
+}: {
+  memberName: string;
+  orgName: string;
+  eventTitle: string;
+  eventDate: string;
+  eventLocation: string | null;
+  ticketTypeName: string;
+  quantity: number;
+  amountCents: number;
+  eventUrl: string;
+}): string {
+  const amount = `$${(amountCents / 100).toFixed(2)}`;
+  return `
+<div style="font-family: system-ui, -apple-system, sans-serif; max-width: 560px; margin: 0 auto; padding: 2rem; color: #111827;">
+  <p style="font-size: 0.8rem; color: #9ca3af; margin: 0 0 1rem; text-transform: uppercase; letter-spacing: 0.08em;">${orgName}</p>
+  <h1 style="font-size: 1.4rem; font-weight: 800; margin: 0 0 0.5rem;">Your ticket is confirmed!</h1>
+  <p style="color: #6b7280; margin: 0 0 1.5rem; line-height: 1.6;">Hi ${memberName}, your ticket purchase for <strong>${eventTitle}</strong> has been confirmed.</p>
+  <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem;">
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr><td style="padding: 0.4rem 0; color: #6b7280; font-size: 0.875rem;">Event</td><td style="padding: 0.4rem 0; font-weight: 600; text-align: right;">${eventTitle}</td></tr>
+      <tr><td style="padding: 0.4rem 0; color: #6b7280; font-size: 0.875rem;">Date</td><td style="padding: 0.4rem 0; font-weight: 600; text-align: right;">${eventDate}</td></tr>
+      ${eventLocation ? `<tr><td style="padding: 0.4rem 0; color: #6b7280; font-size: 0.875rem;">Location</td><td style="padding: 0.4rem 0; font-weight: 600; text-align: right;">${eventLocation}</td></tr>` : ""}
+      <tr><td style="padding: 0.4rem 0; color: #6b7280; font-size: 0.875rem;">Ticket type</td><td style="padding: 0.4rem 0; font-weight: 600; text-align: right;">${ticketTypeName}</td></tr>
+      <tr><td style="padding: 0.4rem 0; color: #6b7280; font-size: 0.875rem;">Quantity</td><td style="padding: 0.4rem 0; font-weight: 600; text-align: right;">${quantity}</td></tr>
+      <tr style="border-top: 1px solid #e5e7eb;"><td style="padding: 0.6rem 0 0; font-weight: 700;">Total paid</td><td style="padding: 0.6rem 0 0; font-weight: 800; text-align: right;">${amount}</td></tr>
+    </table>
+  </div>
+  <a href="${eventUrl}" style="display: inline-block; padding: 0.75rem 1.75rem; background: #3b82f6; color: #fff; border-radius: 8px; font-weight: 700; text-decoration: none;">
+    View event details →
+  </a>
+</div>`.trim();
+}

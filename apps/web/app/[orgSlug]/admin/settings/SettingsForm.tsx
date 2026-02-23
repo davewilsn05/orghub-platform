@@ -16,6 +16,9 @@ type OrgSettings = {
   feature_zoom: boolean;
   feature_documents: boolean;
   feature_member_directory: boolean;
+  stripe_publishable_key: string | null;
+  stripe_secret_key: string | null;
+  stripe_webhook_secret: string | null;
 };
 
 export function SettingsForm({ initial }: { initial: OrgSettings }) {
@@ -121,6 +124,32 @@ export function SettingsForm({ initial }: { initial: OrgSettings }) {
             <img src={form.logo_url} alt="Logo preview" style={{ height: "48px", objectFit: "contain" }} />
           </div>
         )}
+      </Section>
+
+      {/* Stripe */}
+      <Section title="Stripe Payments">
+        <p style={{ fontSize: "0.82rem", color: "#9ca3af", marginTop: "-0.5rem", marginBottom: "0.75rem" }}>
+          Paste your Stripe keys to enable online membership dues and event ticket sales.
+          Webhook URL: <code style={{ fontSize: "0.78rem", background: "#f3f4f6", padding: "1px 5px", borderRadius: "4px" }}>https://YOUR-SUBDOMAIN.orghub.app/api/stripe/webhook/YOUR-SLUG</code>
+        </p>
+        <div>
+          <label style={labelStyle}>Publishable key (pk_…)</label>
+          <input style={inputStyle} value={form.stripe_publishable_key ?? ""}
+            onChange={(e) => set("stripe_publishable_key", e.target.value || null)}
+            placeholder="pk_live_…" />
+        </div>
+        <div>
+          <label style={labelStyle}>Secret key (sk_…)</label>
+          <input style={inputStyle} type="password" value={form.stripe_secret_key ?? ""}
+            onChange={(e) => set("stripe_secret_key", e.target.value || null)}
+            placeholder="sk_live_…" autoComplete="new-password" />
+        </div>
+        <div>
+          <label style={labelStyle}>Webhook signing secret (whsec_…)</label>
+          <input style={inputStyle} type="password" value={form.stripe_webhook_secret ?? ""}
+            onChange={(e) => set("stripe_webhook_secret", e.target.value || null)}
+            placeholder="whsec_…" autoComplete="new-password" />
+        </div>
       </Section>
 
       {/* Features */}

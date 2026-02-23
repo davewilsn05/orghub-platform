@@ -26,6 +26,9 @@ export async function PATCH(request: Request) {
     feature_zoom: boolean;
     feature_documents: boolean;
     feature_member_directory: boolean;
+    stripe_publishable_key: string | null;
+    stripe_secret_key: string | null;
+    stripe_webhook_secret: string | null;
   };
 
   if (!body.name?.trim()) return NextResponse.json({ error: "Name is required." }, { status: 400 });
@@ -47,6 +50,9 @@ export async function PATCH(request: Request) {
       feature_zoom: body.feature_zoom,
       feature_documents: body.feature_documents,
       feature_member_directory: body.feature_member_directory,
+      stripe_publishable_key: body.stripe_publishable_key || null,
+      stripe_secret_key: body.stripe_secret_key || null,
+      stripe_webhook_secret: body.stripe_webhook_secret || null,
     })
     .eq("id", orgId);
 
