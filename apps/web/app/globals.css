@@ -1,0 +1,28 @@
+:root {
+  --org-primary: #1f6feb;
+  --org-primary-dark: #1a56d3;
+  --org-secondary: #2ea043;
+  --org-secondary-dark: #238636;
+  --org-gold: #f0b429;
+  --org-gold-dark: #d79921;
+  --org-bg: #ffffff;
+  --org-text: #111827;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--org-bg);
+  color: var(--org-text);
+  line-height: 1.6;
+}
+
+a {
+  color: var(--org-primary);
+  text-decoration: none;
+}
