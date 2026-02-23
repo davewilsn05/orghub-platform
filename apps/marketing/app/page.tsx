@@ -699,7 +699,6 @@ const PLANS = [
       "All features included",
       "Your own Supabase project",
       "AI assistant (bring your own OpenAI key)",
-      "MIT licensed",
       "Community support",
     ],
   },
