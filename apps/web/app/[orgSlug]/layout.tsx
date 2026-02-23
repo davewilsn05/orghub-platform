@@ -89,9 +89,12 @@ export default async function OrgLayout({ children, params }: Props) {
 
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           {user && (
-            <span style={{ fontSize: "0.8rem", color: "#6b7280" }}>
+            <a href={`/${orgSlug}/profile`} style={{
+              fontSize: "0.8rem", color: "#6b7280",
+              textDecoration: "none", borderBottom: "1px dotted #d1d5db",
+            }}>
               {user.email}
-            </span>
+            </a>
           )}
           <form action={`/${orgSlug}/auth/signout`} method="POST">
             <button

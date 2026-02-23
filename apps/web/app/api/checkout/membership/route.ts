@@ -78,8 +78,8 @@ export async function POST(req: NextRequest) {
     mode: "subscription",
     customer: customerId,
     line_items: [{ price: plan.stripe_price_id, quantity: 1 }],
-    success_url: `${portalUrl}/membership?success=1`,
-    cancel_url: `${portalUrl}/membership?canceled=1`,
+    success_url: `${portalUrl}/profile?success=1`,
+    cancel_url: `${portalUrl}/profile?canceled=1`,
     metadata: {
       profile_id: user.id,
       plan_id: plan.id,
