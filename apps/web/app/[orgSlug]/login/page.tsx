@@ -69,6 +69,7 @@ export default async function LoginPage({ params }: Props) {
         <LoginForm
           orgName={org.name}
           primaryColor={org.branding.primaryColor}
+          orgSlug={orgSlug}
         />
       </div>
     </div>
