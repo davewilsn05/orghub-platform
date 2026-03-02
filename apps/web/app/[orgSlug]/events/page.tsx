@@ -1,5 +1,6 @@
 import { loadOrgConfig } from "@/lib/org/loader";
 import { createClient } from "@/lib/supabase/server";
+import { CalendarSubscribeSection } from "./CalendarSubscribeSection";
 
 type Props = {
   params: Promise<{ orgSlug: string }>;
@@ -34,13 +35,15 @@ export default async function EventsPage({ params }: Props) {
     .eq("is_published", true)
     .lt("start", new Date().toISOString())
     .order("start", { ascending: false })
-    .limit(6);
+    .limit(12);
   const past = pastResult.data as EventRow[] | null;
 
   return (
     <main style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
       <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.25rem" }}>Events</h1>
-      <p style={{ color: "#6b7280", marginBottom: "2rem" }}>{org.name}</p>
+      <p style={{ color: "#6b7280", marginBottom: "1rem" }}>{org.name}</p>
+
+      <CalendarSubscribeSection orgSlug={orgSlug} />
 
       {/* Upcoming */}
       <section style={{ marginBottom: "3rem" }}>
@@ -69,6 +72,11 @@ export default async function EventsPage({ params }: Props) {
               <EventRow key={ev.id} event={ev} orgSlug={orgSlug} />
             ))}
           </div>
+          {past.length === 12 && (
+            <p style={{ fontSize: "0.8rem", color: "#9ca3af", marginTop: "0.75rem", textAlign: "center" }}>
+              Showing the 12 most recent past events.
+            </p>
+          )}
         </section>
       )}
     </main>
@@ -87,7 +95,7 @@ function EventRow({
   const start = new Date(event.start);
   const month = start.toLocaleDateString("en-US", { month: "short" });
   const day = start.getDate();
-  const time = start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const time = start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZoneName: "short" });
 
   return (
     <a href={`/${orgSlug}/events/${event.slug}`} style={{
@@ -124,7 +132,7 @@ function EventRow({
         </div>
         {event.description && (
           <div style={{ fontSize: "0.875rem", color: "#374151", lineHeight: 1.5 }}>
-            {event.description.slice(0, 140)}{event.description.length > 140 ? "…" : ""}
+            {event.description.length > 140 ? event.description.slice(0, 140) + "…" : event.description}
           </div>
         )}
       </div>
