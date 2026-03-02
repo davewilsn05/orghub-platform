@@ -68,7 +68,14 @@ export function CalendarSubscribeSection({ orgSlug }: { orgSlug: string }) {
           >
             Open in Calendar App
           </a>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+              alignItems: "center",
+            }}
+          >
             <input
               type="text"
               readOnly
@@ -78,7 +85,8 @@ export function CalendarSubscribeSection({ orgSlug }: { orgSlug: string }) {
                   : feedPath
               }
               style={{
-                flex: 1,
+                flex: "1 1 200px",
+                minWidth: 0,
                 padding: "6px 10px",
                 borderRadius: 6,
                 border: "1px solid #e5e7eb",

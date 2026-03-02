@@ -7,14 +7,37 @@ interface LoginFormProps {
   orgName: string;
   primaryColor: string;
   orgSlug: string;
+  redirectTo?: string;
 }
 
-export function LoginForm({ orgName, primaryColor, orgSlug }: LoginFormProps) {
+function friendlyAuthError(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes("invalid login") || m.includes("invalid credentials") || m.includes("wrong password")) {
+    return "Incorrect email or password.";
+  }
+  if (m.includes("email not confirmed")) {
+    return "Please confirm your email address before signing in.";
+  }
+  if (m.includes("too many requests") || m.includes("rate limit")) {
+    return "Too many sign-in attempts. Please wait a moment and try again.";
+  }
+  if (m.includes("user not found") || m.includes("no user")) {
+    return "No account found with that email address.";
+  }
+  return "Sign-in failed. Please check your credentials and try again.";
+}
+
+export function LoginForm({ orgName, primaryColor, orgSlug, redirectTo }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,18 +46,18 @@ export function LoginForm({ orgName, primaryColor, orgSlug }: LoginFormProps) {
 
     const supabase = createClient();
     const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim(),
       password,
     });
 
     if (authError) {
-      setError(authError.message);
+      setError(friendlyAuthError(authError.message));
       setLoading(false);
       return;
     }
 
-    // Redirect to dashboard — full reload so middleware picks up the new session
-    window.location.href = "/";
+    // Redirect to the referring page or dashboard
+    window.location.href = redirectTo ?? "/";
   }
 
   async function handleGoogleSignIn() {
@@ -57,10 +80,21 @@ export function LoginForm({ orgName, primaryColor, orgSlug }: LoginFormProps) {
     });
 
     if (authError) {
-      setError(authError.message);
+      setError("Sign in with Google failed. Please try again or use email and password.");
       setGoogleLoading(false);
     }
     // On success, browser navigates to Google — no further action needed here.
+  }
+
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setForgotLoading(true);
+    const supabase = createClient();
+    await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
+      redirectTo: window.location.origin + "/auth/callback",
+    });
+    setForgotSent(true);
+    setForgotLoading(false);
   }
 
   return (
@@ -123,23 +157,74 @@ export function LoginForm({ orgName, primaryColor, orgSlug }: LoginFormProps) {
         </div>
 
         <div>
-          <label style={{ display: "block", fontSize: "0.875rem", fontWeight: 600, marginBottom: "0.4rem", color: "#374151" }}>
-            Password
-          </label>
-          <input
-            type="password"
-            required
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{
-              width: "100%", padding: "0.65rem 0.875rem",
-              border: "1px solid #d1d5db", borderRadius: "8px",
-              fontSize: "0.95rem", outline: "none", boxSizing: "border-box",
-              background: "#fff",
-            }}
-          />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "0.4rem" }}>
+            <label style={{ fontSize: "0.875rem", fontWeight: 600, color: "#374151" }}>
+              Password
+            </label>
+            <button
+              type="button"
+              onClick={() => { setForgotMode(true); setForgotEmail(email.trim()); }}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--org-primary, #3b82f6)", fontSize: "0.8rem", padding: 0 }}
+            >
+              Forgot password?
+            </button>
+          </div>
+          <div style={{ position: "relative" }}>
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{
+                width: "100%", padding: "0.65rem 0.875rem",
+                paddingRight: "3.5rem",
+                border: "1px solid #d1d5db", borderRadius: "8px",
+                fontSize: "0.95rem", outline: "none", boxSizing: "border-box",
+                background: "#fff",
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: "absolute", right: "0.625rem", top: "50%",
+                transform: "translateY(-50%)",
+                background: "none", border: "none", cursor: "pointer",
+                fontSize: "0.75rem", fontWeight: 600, color: "#6b7280",
+                padding: "0.125rem 0.375rem",
+              }}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
         </div>
+
+        {forgotMode && (
+          <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "1rem" }}>
+            {forgotSent ? (
+              <p style={{ fontSize: "0.875rem", color: "#059669", margin: 0 }}>✓ Check your inbox for a password reset link.</p>
+            ) : (
+              <form onSubmit={handleForgotPassword} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <p style={{ fontSize: "0.8rem", color: "#6b7280", margin: 0 }}>Enter your email to receive a reset link.</p>
+                <input
+                  type="email" required value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #d1d5db", borderRadius: "6px", fontSize: "0.875rem", boxSizing: "border-box", outline: "none" }}
+                />
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <button type="submit" disabled={forgotLoading} style={{ padding: "0.5rem 1rem", background: "var(--org-primary, #3b82f6)", color: "#fff", border: "none", borderRadius: "6px", fontWeight: 600, fontSize: "0.875rem", cursor: forgotLoading ? "not-allowed" : "pointer", opacity: forgotLoading ? 0.7 : 1 }}>
+                    {forgotLoading ? "Sending…" : "Send reset link"}
+                  </button>
+                  <button type="button" onClick={() => { setForgotMode(false); setForgotSent(false); setForgotEmail(""); }} style={{ padding: "0.5rem 0.875rem", background: "#fff", border: "1px solid #d1d5db", borderRadius: "6px", fontWeight: 500, fontSize: "0.875rem", cursor: "pointer", color: "#374151" }}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
 
         {error && (
           <div style={{
