@@ -146,19 +146,91 @@ const serverTools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   },
 ];
 
+/* ── admin-only server tools (write operations) ── */
+const adminServerTools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
+  {
+    type: "function",
+    function: {
+      name: "create_event",
+      description:
+        "Create a new event directly in the database. Admin only. Requires at least a title and start date/time.",
+      parameters: {
+        type: "object",
+        properties: {
+          title: { type: "string", description: "Event title" },
+          start: {
+            type: "string",
+            description: "ISO 8601 datetime, e.g. 2026-03-14T18:00:00",
+          },
+          location: { type: "string", description: "Event location or venue" },
+          description: { type: "string", description: "Event description" },
+          category: {
+            type: "string",
+            description: "Event category, e.g. Social, Meeting, Fundraiser",
+          },
+        },
+        required: ["title", "start"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "update_event",
+      description:
+        "Update an existing event. Find by title (exact or partial match). Only provided fields are changed.",
+      parameters: {
+        type: "object",
+        properties: {
+          search_title: {
+            type: "string",
+            description: "Title (or partial title) of the event to update",
+          },
+          title: { type: "string", description: "New title" },
+          start: { type: "string", description: "New start date/time (ISO 8601)" },
+          location: { type: "string", description: "New location" },
+          description: { type: "string", description: "New description" },
+          category: { type: "string", description: "New category" },
+        },
+        required: ["search_title"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "delete_event",
+      description:
+        "Delete an event from the database. Finds the event by title (exact or partial match). Admin only.",
+      parameters: {
+        type: "object",
+        properties: {
+          search_title: {
+            type: "string",
+            description: "Title (or partial title) of the event to delete",
+          },
+        },
+        required: ["search_title"],
+      },
+    },
+  },
+];
+
 const CLIENT_TOOL_NAMES = new Set(
   clientTools.map(
     (t) => (t as { type: "function"; function: { name: string } }).function.name
   )
 );
-const allTools = [...clientTools, ...serverTools];
+const adminTools = [...clientTools, ...serverTools, ...adminServerTools];
+const memberTools = [...serverTools];
 
 /* ── server-side tool execution ── */
 async function executeServerTool(
   name: string,
   args: Record<string, unknown>,
   supabase: AnySupabase,
-  isAdmin: boolean
+  isAdmin: boolean,
+  orgId?: string
 ): Promise<string> {
   switch (name) {
     case "lookup_events": {
@@ -273,6 +345,109 @@ async function executeServerTool(
       });
       return `${data.length} newsletter(s):\n${lines.join("\n")}`;
     }
+    case "create_event": {
+      if (!isAdmin) return "Only admins can create events.";
+
+      const title = args.title as string;
+      const start = args.start as string;
+      if (!title || !start) return "Title and start are required to create an event.";
+
+      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80) + `-${Date.now()}`;
+
+      if (!orgId) return "Cannot determine organization. Please try again.";
+
+      const eventData: Record<string, unknown> = {
+        title,
+        slug,
+        start,
+        org_id: orgId,
+        location: (args.location as string) || null,
+        description: (args.description as string) || null,
+        category: (args.category as string) || null,
+        is_published: true,
+      };
+
+      const { data: ev, error } = await supabase
+        .from("events")
+        .insert(eventData)
+        .select("id, title, start, location, category")
+        .single();
+
+      if (error) return `Failed to create event: ${error.message}`;
+
+      const d = new Date(ev.start as string).toLocaleDateString("en-US", {
+        weekday: "short", month: "short", day: "numeric", year: "numeric",
+        hour: "numeric", minute: "2-digit",
+      });
+      return `Event created successfully!\n- Title: ${ev.title}\n- Date: ${d}${ev.location ? `\n- Location: ${ev.location}` : ""}${ev.category ? `\n- Category: ${ev.category}` : ""}`;
+    }
+    case "update_event": {
+      if (!isAdmin) return "Only admins can update events.";
+
+      const searchTitle = args.search_title as string;
+      if (!searchTitle) return "search_title is required to find the event.";
+
+      const { data: matches, error: findError } = await supabase
+        .from("events")
+        .select("id, title, start")
+        .ilike("title", `%${searchTitle}%`)
+        .order("start", { ascending: true })
+        .limit(5);
+
+      if (findError) return `Error finding event: ${findError.message}`;
+      if (!matches || matches.length === 0) return `No event found matching "${searchTitle}".`;
+      if (matches.length > 1) {
+        const list = matches.map((e: Record<string, unknown>) => `- ${e.title} (${new Date(e.start as string).toLocaleDateString("en-US")})`).join("\n");
+        return `Multiple events match "${searchTitle}". Please be more specific:\n${list}`;
+      }
+
+      const event = matches[0] as Record<string, unknown>;
+      const updates: Record<string, unknown> = {};
+      if (args.title) updates.title = args.title;
+      if (args.start) updates.start = args.start;
+      if (args.location !== undefined) updates.location = args.location || null;
+      if (args.description !== undefined) updates.description = args.description || null;
+      if (args.category !== undefined) updates.category = args.category || null;
+
+      if (Object.keys(updates).length === 0) return "No fields to update were provided.";
+
+      const { error: updateError } = await supabase
+        .from("events")
+        .update(updates)
+        .eq("id", event.id);
+
+      if (updateError) return `Failed to update event: ${updateError.message}`;
+      return `Updated "${event.title}" — changed: ${Object.keys(updates).join(", ")}.`;
+    }
+    case "delete_event": {
+      if (!isAdmin) return "Only admins can delete events.";
+
+      const searchTitle = args.search_title as string;
+      if (!searchTitle) return "search_title is required to find the event.";
+
+      const { data: matches, error: findError } = await supabase
+        .from("events")
+        .select("id, title, start")
+        .ilike("title", `%${searchTitle}%`)
+        .order("start", { ascending: true })
+        .limit(5);
+
+      if (findError) return `Error finding event: ${findError.message}`;
+      if (!matches || matches.length === 0) return `No event found matching "${searchTitle}".`;
+      if (matches.length > 1) {
+        const list = matches.map((e: Record<string, unknown>) => `- ${e.title} (${new Date(e.start as string).toLocaleDateString("en-US")})`).join("\n");
+        return `Multiple events match "${searchTitle}". Please be more specific:\n${list}`;
+      }
+
+      const event = matches[0] as Record<string, unknown>;
+      const { error: deleteError } = await supabase
+        .from("events")
+        .delete()
+        .eq("id", event.id);
+
+      if (deleteError) return `Failed to delete event: ${deleteError.message}`;
+      return `Deleted event: "${event.title}" (${new Date(event.start as string).toLocaleDateString("en-US")}).`;
+    }
     default:
       return `Unknown tool: ${name}`;
   }
@@ -289,7 +464,7 @@ function buildSystemPrompt(orgName: string, isAdmin: boolean): string {
   const adminNav = isAdmin
     ? `
 ADMIN TOOLS:
-- To parse an event from text, paste the event information and I'll extract it into a draft.
+- You can CREATE events directly — just provide title and date/time. Also update or delete existing events.
 - To draft a newsletter, describe the topic or paste bullet points and I'll write it.
 - You can also attach documents (.rtf, .txt, .pdf, .docx) and I'll read them.`
     : "";
@@ -306,7 +481,8 @@ RULES:
 - Be concise, friendly, and helpful.
 - You have access to real data via tools. When asked about events, members, or newsletters, USE the lookup tools to get actual data — do NOT tell the user to go check a page.
 - Never invent data. If a lookup returns no results, say so.
-- Use create_event_draft or draft_newsletter when asked to create/draft content.
+- When an admin asks to add/create an event, use create_event to insert it directly. Use create_event_draft only if they specifically want to review it in the form first.
+- Use draft_newsletter when asked to draft newsletter content.
 - If a member asks how to do something, walk them through it step by step.`;
 }
 
@@ -400,7 +576,7 @@ export async function POST(request: Request) {
             })),
           ];
 
-        const enabledTools = isAdmin ? allTools : serverTools;
+        const enabledTools = isAdmin ? adminTools : memberTools;
 
         let loops = 0;
         const MAX_LOOPS = 5;
@@ -513,7 +689,8 @@ export async function POST(request: Request) {
                   sc.name,
                   sc.args,
                   supabase,
-                  isAdmin
+                  isAdmin,
+                  user.app_metadata?.org_id as string | undefined
                 ),
               }))
             );
