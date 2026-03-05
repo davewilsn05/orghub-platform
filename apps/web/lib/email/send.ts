@@ -7,32 +7,35 @@ type EmailOptions = {
 };
 
 export async function sendEmail({ to, subject, html, from, fromName }: EmailOptions): Promise<void> {
-  const apiKey = process.env.SENDGRID_API_KEY;
-  if (!apiKey) throw new Error("SENDGRID_API_KEY is not configured. Add it to your .env.local file.");
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error("RESEND_API_KEY is not configured. Add it to your .env.local file.");
 
   const fromEmail = from ?? process.env.DEFAULT_FROM_EMAIL ?? "noreply@orghub.app";
+  const fromField = fromName ? `${fromName} <${fromEmail}>` : fromEmail;
   const toList = Array.isArray(to) ? to : [to];
 
-  // SendGrid accepts up to 1000 personalizations per request
-  const personalizations = toList.map((email) => ({ to: [{ email }] }));
+  // Resend supports up to 50 recipients per request — batch if needed
+  const BATCH = 50;
+  for (let i = 0; i < toList.length; i += BATCH) {
+    const batch = toList.slice(i, i + BATCH);
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: fromField,
+        to: batch,
+        subject,
+        html,
+      }),
+    });
 
-  const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      personalizations,
-      from: { email: fromEmail, name: fromName ?? "OrgHub" },
-      subject,
-      content: [{ type: "text/html", value: html }],
-    }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`SendGrid error ${res.status}: ${text}`);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Resend error ${res.status}: ${text}`);
+    }
   }
 }
 
@@ -101,6 +104,29 @@ export function renewalReminderEmailHtml({
   </a>
   <p style="color: #9ca3af; font-size: 0.8rem; margin: 2rem 0 0; line-height: 1.5;">
     If you've already renewed, you can ignore this email.
+  </p>
+</div>`.trim();
+}
+
+export function welcomeEmailHtml({
+  memberName, orgName, portalUrl,
+}: {
+  memberName: string;
+  orgName: string;
+  portalUrl: string;
+}): string {
+  return `
+<div style="font-family: system-ui, -apple-system, sans-serif; max-width: 560px; margin: 0 auto; padding: 2rem; color: #111827;">
+  <p style="font-size: 0.8rem; color: #9ca3af; margin: 0 0 1rem; text-transform: uppercase; letter-spacing: 0.08em;">${orgName}</p>
+  <h1 style="font-size: 1.5rem; font-weight: 800; margin: 0 0 0.5rem;">Welcome, ${memberName}!</h1>
+  <p style="color: #6b7280; margin: 0 0 2rem; line-height: 1.6;">
+    Your account for the ${orgName} member portal is ready. You can now access events, newsletters, and all member resources.
+  </p>
+  <a href="${portalUrl}/dashboard" style="display: inline-block; padding: 0.85rem 2rem; background: #3b82f6; color: #fff; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 1rem;">
+    Go to your dashboard →
+  </a>
+  <p style="color: #9ca3af; font-size: 0.8rem; margin: 2rem 0 0; line-height: 1.5;">
+    Questions? Reply to this email and we'll be happy to help.
   </p>
 </div>`.trim();
 }

@@ -41,7 +41,16 @@ export async function POST(request: Request) {
     .eq("slug", finalSlug)
     .maybeSingle();
 
-  if (existing) finalSlug = `${finalSlug}-${Date.now()}`;
+  if (existing) {
+    let counter = 2;
+    while (counter <= 20) {
+      const candidate = `${finalSlug}-${counter}`;
+      const { data: taken } = await service.from("events").select("id").eq("org_id", orgId).eq("slug", candidate).maybeSingle();
+      if (!taken) { finalSlug = candidate; break; }
+      counter++;
+    }
+    if (counter > 20) finalSlug = `${finalSlug}-${Date.now()}`;
+  }
 
   const { data: event, error } = await service
     .from("events")

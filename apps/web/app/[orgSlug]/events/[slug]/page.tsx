@@ -4,10 +4,14 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { RsvpButton } from "./RsvpButton";
 import { TicketSection } from "./TicketSection";
 
-type Props = { params: Promise<{ orgSlug: string; slug: string }> };
+type Props = {
+  params: Promise<{ orgSlug: string; slug: string }>;
+  searchParams: Promise<{ ticket_success?: string }>;
+};
 
-export default async function EventDetailPage({ params }: Props) {
+export default async function EventDetailPage({ params, searchParams }: Props) {
   const { orgSlug, slug } = await params;
+  const { ticket_success } = await searchParams;
   const org = await loadOrgConfig();
   const supabase = await createClient();
   const service = createServiceClient();
@@ -54,11 +58,24 @@ export default async function EventDetailPage({ params }: Props) {
   const timeStr = start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const endStr = end ? ` – ${end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}` : "";
 
+  const spotsLeft = ev.rsvp_limit !== null ? ev.rsvp_limit - (rsvpCount ?? 0) : null;
+
   return (
     <main style={{ padding: "2rem", maxWidth: "760px", margin: "0 auto" }}>
       <a href={`/${orgSlug}/events`} style={{ fontSize: "0.825rem", color: "#9ca3af", textDecoration: "none" }}>
         ← Events
       </a>
+
+      {ticket_success === "1" && (
+        <div style={{
+          marginTop: "1.25rem",
+          padding: "1rem 1.25rem", background: "#d1fae5",
+          border: "1px solid #6ee7b7", borderRadius: "10px",
+          color: "#065f46", fontWeight: 600, fontSize: "0.95rem",
+        }}>
+          🎟️ Your tickets have been purchased! Check your email for a confirmation receipt.
+        </div>
+      )}
 
       <div style={{ marginTop: "1.25rem", marginBottom: "2rem" }}>
         {ev.category && (
@@ -69,27 +86,34 @@ export default async function EventDetailPage({ params }: Props) {
         <h1 style={{ fontSize: "2rem", fontWeight: 800, marginBottom: "1.25rem", lineHeight: 1.15 }}>{ev.title}</h1>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "1.75rem" }}>
-          <MetaRow icon="📅" text={`${dateStr} at ${timeStr}${endStr}`} />
-          {ev.location && <MetaRow icon="📍" text={ev.location} />}
-          {ev.rsvp_enabled && <MetaRow icon="👥" text={`${rsvpCount ?? 0} attending${ev.rsvp_limit ? ` · ${ev.rsvp_limit} spots total` : ""}`} />}
+          <MetaRow icon="📅" text={`${dateStr} at ${timeStr}${endStr}`} ariaLabel="Date and time" />
+          {ev.location && <MetaRow icon="📍" text={ev.location} ariaLabel="Location" />}
+          {ev.rsvp_enabled && <MetaRow icon="👥" text={`${rsvpCount ?? 0} attending${ev.rsvp_limit ? ` · ${ev.rsvp_limit} spots total` : ""}`} ariaLabel="Attendees" />}
         </div>
 
         {ev.rsvp_enabled && user && (
           <RsvpButton
-            eventSlug={slug}
+            eventId={ev.id}
             initialStatus={userRsvpStatus}
             rsvpLimit={ev.rsvp_limit}
             rsvpCount={rsvpCount ?? 0}
           />
         )}
         {ev.rsvp_enabled && !user && (
-          <a href={`/${orgSlug}/login`} style={{
-            display: "inline-block", padding: "0.75rem 2rem",
-            background: "var(--org-primary, #3b82f6)", color: "#fff",
-            borderRadius: "9px", fontWeight: 700, textDecoration: "none",
-          }}>
-            Sign in to RSVP →
-          </a>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+            <a href={`/${orgSlug}/login?redirect=/${orgSlug}/events/${ev.slug}`} style={{
+              display: "inline-block", padding: "0.75rem 2rem",
+              background: "var(--org-primary, #3b82f6)", color: "#fff",
+              borderRadius: "9px", fontWeight: 700, textDecoration: "none",
+            }}>
+              Sign in to RSVP →
+            </a>
+            {spotsLeft !== null && (
+              <span style={{ fontSize: "0.85rem", color: spotsLeft <= 5 ? "#dc2626" : "#6b7280" }}>
+                {spotsLeft <= 0 ? "Event is full" : `${spotsLeft} spot${spotsLeft !== 1 ? "s" : ""} left`}
+              </span>
+            )}
+          </div>
         )}
       </div>
 
@@ -102,7 +126,7 @@ export default async function EventDetailPage({ params }: Props) {
         </div>
       )}
 
-      {ev.is_zoom_meeting && ev.zoom_url && (
+      {ev.is_zoom_meeting && ev.zoom_url && org.features.zoom && (
         <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "12px", padding: "1.25rem" }}>
           <div style={{ fontWeight: 700, marginBottom: "0.5rem" }}>📹 This is a Zoom meeting</div>
           <a href={ev.zoom_url} target="_blank" rel="noopener noreferrer" style={{ color: "#2563eb", fontWeight: 600, fontSize: "0.9rem" }}>
@@ -117,10 +141,10 @@ export default async function EventDetailPage({ params }: Props) {
   );
 }
 
-function MetaRow({ icon, text }: { icon: string; text: string }) {
+function MetaRow({ icon, text, ariaLabel }: { icon: string; text: string; ariaLabel?: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: "0.6rem", fontSize: "0.95rem", color: "#374151" }}>
-      <span style={{ flexShrink: 0 }}>{icon}</span>
+    <div style={{ display: "flex", alignItems: "flex-start", gap: "0.6rem", fontSize: "0.95rem", color: "#374151" }} aria-label={ariaLabel}>
+      <span aria-hidden="true" style={{ flexShrink: 0 }}>{icon}</span>
       <span>{text}</span>
     </div>
   );

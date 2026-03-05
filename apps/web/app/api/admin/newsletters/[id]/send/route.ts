@@ -18,8 +18,8 @@ export async function POST(_request: Request, { params }: Params) {
   const orgId = user.app_metadata?.org_id as string | undefined;
   if (!orgId) return NextResponse.json({ error: "No org context" }, { status: 400 });
 
-  if (!process.env.SENDGRID_API_KEY) {
-    return NextResponse.json({ error: "Email is not configured. Add SENDGRID_API_KEY to your environment." }, { status: 503 });
+  if (!process.env.RESEND_API_KEY) {
+    return NextResponse.json({ error: "Email is not configured. Add RESEND_API_KEY to your environment." }, { status: 503 });
   }
 
   const service = createServiceClient();

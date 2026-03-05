@@ -18,10 +18,11 @@ export function NewsletterEditor({ orgSlug, newsletter }: Props) {
 
   const [title, setTitle] = useState(newsletter?.title ?? "");
   const [body, setBody] = useState(newsletter?.body ?? "");
-  const [slugTouched] = useState(isEdit);
   const [loading, setLoading] = useState<"save" | "publish" | "send" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sendOk, setSendOk] = useState(false);
+  const [preview, setPreview] = useState(false);
+  const [confirmSend, setConfirmSend] = useState(false);
 
   async function submit(action: "save" | "publish") {
     setError(null);
@@ -54,11 +55,13 @@ export function NewsletterEditor({ orgSlug, newsletter }: Props) {
     if (!newsletter?.id) return;
     setError(null);
     setLoading("send");
+    setConfirmSend(false);
     const res = await fetch(`/api/admin/newsletters/${newsletter.id}/send`, { method: "POST" });
     const json = await res.json() as { error?: string; sent?: number };
     if (!res.ok) { setError(json.error ?? "Failed to send."); setLoading(null); return; }
     setSendOk(true);
     setLoading(null);
+    setTimeout(() => router.push(`/${orgSlug}/admin/newsletters`), 4000);
   }
 
   const btnStyle = (primary?: boolean): React.CSSProperties => ({
@@ -94,22 +97,81 @@ export function NewsletterEditor({ orgSlug, newsletter }: Props) {
         />
       </div>
 
+      {/* Edit / Preview toggle */}
       <div>
-        <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.35rem" }}>
-          Body
-        </label>
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="Write your newsletter here…"
-          style={{
-            width: "100%", minHeight: "380px", padding: "1rem",
-            border: "1px solid #d1d5db", borderRadius: "8px",
-            fontSize: "0.95rem", lineHeight: 1.7, resize: "vertical",
-            fontFamily: "system-ui, sans-serif", boxSizing: "border-box", outline: "none",
-          }}
-        />
-        <p style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "0.35rem" }}>Plain text. Line breaks are preserved when displayed.</p>
+        <div style={{ display: "flex", borderBottom: "1px solid #e5e7eb", marginBottom: "0.75rem" }}>
+          <button
+            type="button"
+            onClick={() => setPreview(false)}
+            style={{
+              padding: "0.4rem 1rem", border: "none",
+              background: !preview ? "var(--org-primary-bg, #eff6ff)" : "transparent",
+              fontSize: "0.85rem", fontWeight: preview ? 400 : 700,
+              color: preview ? "#9ca3af" : "var(--org-primary, #3b82f6)",
+              borderBottom: preview ? "2px solid transparent" : "2px solid var(--org-primary, #3b82f6)",
+              borderRadius: "6px 6px 0 0",
+              cursor: "pointer", marginBottom: "-1px",
+            }}
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={() => setPreview(true)}
+            style={{
+              padding: "0.4rem 1rem", border: "none",
+              background: preview ? "var(--org-primary-bg, #eff6ff)" : "transparent",
+              fontSize: "0.85rem", fontWeight: preview ? 700 : 400,
+              color: preview ? "var(--org-primary, #3b82f6)" : "#9ca3af",
+              borderBottom: preview ? "2px solid var(--org-primary, #3b82f6)" : "2px solid transparent",
+              borderRadius: "6px 6px 0 0",
+              cursor: "pointer", marginBottom: "-1px",
+            }}
+          >
+            Preview
+          </button>
+        </div>
+
+        {preview ? (
+          <div style={{
+            minHeight: "380px", padding: "1.5rem",
+            border: "1px solid #e5e7eb", borderRadius: "8px",
+            background: "#fafafa",
+          }}>
+            {title && (
+              <h2 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "1.25rem", marginTop: 0, color: "#111827" }}>
+                {title}
+              </h2>
+            )}
+            {body ? (
+              <div style={{ color: "#374151", lineHeight: 1.8, fontSize: "0.95rem", whiteSpace: "pre-wrap" }}>
+                {body}
+              </div>
+            ) : (
+              <p style={{ color: "#9ca3af", fontStyle: "italic" }}>No content yet.</p>
+            )}
+          </div>
+        ) : (
+          <>
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="Write your newsletter here…"
+              style={{
+                width: "100%", minHeight: "380px", padding: "1rem",
+                border: "1px solid #d1d5db", borderRadius: "8px",
+                fontSize: "0.95rem", lineHeight: 1.7, resize: "vertical",
+                fontFamily: "system-ui, sans-serif", boxSizing: "border-box", outline: "none",
+              }}
+            />
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.35rem" }}>
+              <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: 0 }}>Plain text. Line breaks are preserved when displayed.</p>
+              <span style={{ fontSize: "0.75rem", color: body.length > 10000 ? "#dc2626" : body.length > 5000 ? "#d97706" : "#9ca3af" }}>
+                {body.length.toLocaleString()} characters{body.length > 10000 ? " — very long, may not deliver" : ""}
+              </span>
+            </div>
+          </>
+        )}
       </div>
 
       <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
@@ -119,18 +181,34 @@ export function NewsletterEditor({ orgSlug, newsletter }: Props) {
         <button onClick={() => submit("publish")} disabled={!!loading || !title} style={btnStyle(true)}>
           {loading === "publish" ? "Publishing…" : newsletter?.status === "published" ? "Update" : "Publish →"}
         </button>
-        {isEdit && newsletter?.status === "published" && (
-          <button onClick={sendNewsletter} disabled={!!loading || sendOk} style={{
+        {isEdit && newsletter?.status === "published" && !sendOk && (
+          <button onClick={() => setConfirmSend(true)} disabled={!!loading} style={{
             ...btnStyle(), background: "#ecfdf5", color: "#065f46",
             border: "1px solid #6ee7b7",
           }}>
-            {loading === "send" ? "Sending…" : sendOk ? "✓ Sent" : "Send to members"}
+            {loading === "send" ? "Sending…" : "Send to members"}
           </button>
         )}
         <a href={`/${orgSlug}/admin/newsletters`} style={{ fontSize: "0.875rem", color: "#9ca3af", textDecoration: "none", marginLeft: "auto" }}>
           Cancel
         </a>
       </div>
+
+      {confirmSend && (
+        <div style={{ background: "#fff", border: "1px solid #fde68a", borderRadius: "8px", padding: "0.875rem 1rem", display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+          <span style={{ fontSize: "0.875rem", color: "#374151", flex: 1 }}>
+            Send this newsletter to all active members? This cannot be undone.
+          </span>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button onClick={sendNewsletter} style={{ padding: "0.45rem 1rem", background: "#065f46", color: "#fff", border: "none", borderRadius: "6px", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer" }}>
+              Send now
+            </button>
+            <button onClick={() => setConfirmSend(false)} style={{ padding: "0.45rem 0.875rem", background: "#fff", border: "1px solid #d1d5db", borderRadius: "6px", fontWeight: 500, fontSize: "0.8rem", cursor: "pointer", color: "#374151" }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 
-type Params = { params: Promise<{ slug: string }> };
+type Params = { params: Promise<{ eventId: string }> };
 
 export async function POST(request: Request, { params }: Params) {
-  const { slug } = await params;
+  const { eventId } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,7 +20,7 @@ export async function POST(request: Request, { params }: Params) {
     .from("events")
     .select("id, rsvp_enabled, rsvp_limit")
     .eq("org_id", orgId)
-    .eq("slug", slug)
+    .eq("id", eventId)
     .maybeSingle();
 
   if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
@@ -51,7 +51,7 @@ export async function POST(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const { slug } = await params;
+  const { eventId } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -64,7 +64,7 @@ export async function DELETE(_request: Request, { params }: Params) {
     .from("events")
     .select("id")
     .eq("org_id", orgId)
-    .eq("slug", slug)
+    .eq("id", eventId)
     .maybeSingle();
 
   if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });

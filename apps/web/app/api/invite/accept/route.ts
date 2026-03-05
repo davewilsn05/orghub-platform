@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { sendEmail, welcomeEmailHtml } from "@/lib/email/send";
 
 export async function POST(request: Request) {
   const body = await request.json() as {
@@ -38,10 +39,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "This invite link has expired. Ask your admin for a new one." }, { status: 410 });
   }
 
-  // Get org slug for redirect
+  // Get org details for redirect and welcome email
   const { data: org } = await service
     .from("organizations")
-    .select("slug")
+    .select("name, slug")
     .eq("id", invite.org_id)
     .maybeSingle();
 
@@ -91,6 +92,25 @@ export async function POST(request: Request) {
     .from("invites")
     .update({ accepted_at: new Date().toISOString() })
     .eq("id", invite.id);
+
+  // Send welcome email (non-blocking — account is created regardless)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "orghub.app";
+      const isDev = process.env.NODE_ENV === "development";
+      const portalUrl = isDev
+        ? `http://localhost:3000?org=${org.slug}`
+        : `https://${org.slug}.${rootDomain}`;
+      await sendEmail({
+        to: invite.email,
+        subject: `Welcome to ${org.name}!`,
+        html: welcomeEmailHtml({ memberName: fullName, orgName: org.name, portalUrl }),
+        fromName: org.name,
+      });
+    } catch {
+      // Email failure is non-fatal — account was created successfully
+    }
+  }
 
   return NextResponse.json({ orgSlug: org.slug }, { status: 201 });
 }

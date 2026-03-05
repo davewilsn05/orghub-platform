@@ -1,6 +1,7 @@
 import { loadOrgConfig } from "@/lib/org/loader";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import { MemberNav } from "./MemberNav";
 
 type Props = {
   children: React.ReactNode;
@@ -54,38 +55,12 @@ export default async function OrgLayout({ children, params }: Props) {
           }}
         >
           {org.branding.logoUrl && (
-            <img src={org.branding.logoUrl} alt="" style={{ height: "28px", objectFit: "contain" }} />
+            <img src={org.branding.logoUrl} alt={org.name} style={{ height: "28px", objectFit: "contain" }} />
           )}
           {org.name}
         </a>
 
-        <div style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}>
-          {isAdmin && (
-            <a href={`/${orgSlug}/admin`} style={{
-              padding: "0.4rem 0.75rem", borderRadius: "6px",
-              fontSize: "0.875rem", fontWeight: 600,
-              color: "var(--org-primary, #3b82f6)", textDecoration: "none",
-            }}>
-              Admin
-            </a>
-          )}
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              style={{
-                padding: "0.4rem 0.75rem",
-                borderRadius: "6px",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                color: "#374151",
-                textDecoration: "none",
-              }}
-            >
-              {link.label}
-            </a>
-          ))}
-        </div>
+        <MemberNav orgSlug={orgSlug} navLinks={navLinks} isAdmin={isAdmin} />
 
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           {user && (

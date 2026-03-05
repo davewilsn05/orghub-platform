@@ -7,6 +7,7 @@ type Props = { token: string; email: string; orgName: string; orgSlug: string };
 export function JoinForm({ token, email, orgName, orgSlug }: Props) {
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,8 +73,26 @@ export function JoinForm({ token, email, orgName, orgSlug }: Props) {
 
       <div>
         <label style={labelStyle}>Choose a password</label>
-        <input style={inputStyle} type="password" required minLength={6} value={password}
-          onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" />
+        <div style={{ position: "relative" }}>
+          <input style={inputStyle} type={showPassword ? "text" : "password"} required minLength={6} value={password}
+            onChange={(e) => setPassword(e.target.value)} />
+          <button
+            type="button"
+            onClick={() => setShowPassword((s) => !s)}
+            style={{
+              position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)",
+              background: "none", border: "none", cursor: "pointer",
+              color: "#9ca3af", fontSize: "0.8rem", padding: 0,
+            }}
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
+        {password.length > 0 && password.length < 6 ? (
+          <span style={{ display: "block", fontSize: "0.75rem", color: "#dc2626", marginTop: "0.3rem" }}>Too short — minimum 6 characters</span>
+        ) : (
+          <span style={{ display: "block", fontSize: "0.75rem", color: "#9ca3af", marginTop: "0.3rem" }}>Minimum 6 characters</span>
+        )}
       </div>
 
       <button type="submit" disabled={loading} style={{

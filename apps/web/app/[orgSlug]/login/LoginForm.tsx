@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface LoginFormProps {
@@ -38,6 +38,35 @@ export function LoginForm({ orgName, primaryColor, orgSlug, redirectTo }: LoginF
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+
+  // Handle magic-link implicit flow: extract tokens from hash and establish session
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash) return;
+    const params = new URLSearchParams(hash.replace(/^#/, ""));
+    if (params.get("type") !== "magiclink") return;
+
+    const accessToken = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+    if (!accessToken || !refreshToken) return;
+
+    const supabase = createClient();
+    (async () => {
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+      if (sessionError) {
+        console.error("[LoginForm] setSession error", sessionError);
+        setError("Magic link expired or invalid. Please request a new one.");
+        return;
+      }
+      window.location.replace(redirectTo ?? "/");
+    })().catch((err) => {
+      console.error("[LoginForm] magic link error", err);
+      setError("Something went wrong. Please try signing in again.");
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -17,6 +17,10 @@ export default function MembershipPlansPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toggling, setToggling] = useState<Set<string>>(new Set());
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [newPlanId, setNewPlanId] = useState<string | null>(null);
+  const [undoDeactivate, setUndoDeactivate] = useState<{ id: string; name: string } | null>(null);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -57,19 +61,41 @@ export default function MembershipPlansPage() {
       }),
     });
 
-    const json = await res.json() as { error?: string };
+    const json = await res.json() as { error?: string; plan?: { id: string } };
     if (!res.ok) { setError(json.error ?? "Failed to create plan."); setCreating(false); return; }
 
     setName(""); setDescription(""); setPriceDollars(""); setStripePriceId(""); setInterval("year");
     setCreating(false);
+    if (json.plan?.id) { setNewPlanId(json.plan.id); setTimeout(() => setNewPlanId(null), 4000); }
     await load();
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
   }
 
   async function toggleActive(plan: Plan) {
+    if (plan.is_active && !window.confirm(`Deactivate "${plan.name}"? Members won't be able to subscribe to this plan.`)) return;
+    setToggling((prev) => new Set([...prev, plan.id]));
     await fetch(`/api/admin/membership-plans/${plan.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_active: !plan.is_active }),
+    });
+    setToggling((prev) => { const next = new Set(prev); next.delete(plan.id); return next; });
+    if (plan.is_active) {
+      setUndoDeactivate({ id: plan.id, name: plan.name });
+      setTimeout(() => setUndoDeactivate(null), 6000);
+    } else {
+      setUndoDeactivate(null);
+    }
+    await load();
+  }
+
+  async function handleUndoDeactivate(id: string) {
+    setUndoDeactivate(null);
+    await fetch(`/api/admin/membership-plans/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_active: true }),
     });
     await load();
   }
@@ -89,6 +115,12 @@ export default function MembershipPlansPage() {
         Create plans and link them to Stripe Price IDs for recurring dues collection.
       </p>
 
+      {undoDeactivate && (
+        <div style={{ padding: "0.75rem 1rem", background: "#fef3c7", border: "1px solid #fde68a", borderRadius: "8px", color: "#92400e", fontSize: "0.875rem", marginBottom: "1rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span>"{undoDeactivate.name}" deactivated.</span>
+          <button onClick={() => handleUndoDeactivate(undoDeactivate.id)} style={{ background: "none", border: "1px solid #d97706", borderRadius: "6px", cursor: "pointer", color: "#92400e", fontWeight: 700, fontSize: "0.8rem", padding: "0.2rem 0.6rem" }}>Undo</button>
+        </div>
+      )}
       {loading ? (
         <div style={{ color: "#9ca3af" }}>Loading…</div>
       ) : (
@@ -98,9 +130,12 @@ export default function MembershipPlansPage() {
           )}
           {plans.map((plan) => (
             <div key={plan.id} style={{
-              background: "#fff", border: "1px solid #e5e7eb", borderRadius: "12px",
+              background: plan.id === newPlanId ? "#f0fdf4" : "#fff",
+              border: plan.id === newPlanId ? "1px solid #86efac" : "1px solid #e5e7eb",
+              borderRadius: "12px",
               padding: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center",
               opacity: plan.is_active ? 1 : 0.55,
+              transition: "background 0.5s, border-color 0.5s",
             }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: "0.975rem" }}>{plan.name}</div>
@@ -125,12 +160,13 @@ export default function MembershipPlansPage() {
                   )}
                 </div>
               </div>
-              <button onClick={() => toggleActive(plan)} style={{
+              <button onClick={() => toggleActive(plan)} disabled={toggling.has(plan.id)} style={{
                 padding: "0.45rem 1rem", border: "1px solid #d1d5db", borderRadius: "7px",
-                background: "#fff", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600,
-                color: "#374151", whiteSpace: "nowrap",
+                background: "#fff", cursor: toggling.has(plan.id) ? "not-allowed" : "pointer",
+                fontSize: "0.8rem", fontWeight: 600,
+                color: "#374151", whiteSpace: "nowrap", opacity: toggling.has(plan.id) ? 0.6 : 1,
               }}>
-                {plan.is_active ? "Deactivate" : "Activate"}
+                {toggling.has(plan.id) ? "Saving…" : plan.is_active ? "Deactivate" : "Activate"}
               </button>
             </div>
           ))}
@@ -140,6 +176,11 @@ export default function MembershipPlansPage() {
       {/* Create form */}
       <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "12px", padding: "1.5rem" }}>
         <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem", marginTop: 0 }}>New plan</h2>
+        {saveSuccess && (
+          <div style={{ padding: "0.75rem 1rem", background: "#f0fdf4", border: "1px solid #86efac", borderRadius: "8px", color: "#166534", fontSize: "0.875rem", marginBottom: "1rem" }}>
+            ✓ Plan created successfully.
+          </div>
+        )}
         {error && (
           <div style={{ padding: "0.75rem 1rem", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", color: "#b91c1c", fontSize: "0.875rem", marginBottom: "1rem" }}>
             {error}

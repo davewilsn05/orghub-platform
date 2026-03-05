@@ -7,7 +7,7 @@ type Props = { params: Promise<{ orgSlug: string }> };
 export const metadata = { title: "Settings — Admin" };
 
 export default async function AdminSettingsPage({ params }: Props) {
-  await params;
+  const { orgSlug } = await params;
   const org = await loadOrgConfig();
   const supabase = createServiceClient();
 
@@ -27,7 +27,7 @@ export default async function AdminSettingsPage({ params }: Props) {
       <p style={{ color: "#6b7280", fontSize: "0.875rem", marginBottom: "1.75rem" }}>
         Manage your portal identity, branding, and enabled features.
       </p>
-      <SettingsForm initial={row as OrgRow} />
+      <SettingsForm initial={row as OrgRow} orgSlug={orgSlug} />
     </div>
   );
 }

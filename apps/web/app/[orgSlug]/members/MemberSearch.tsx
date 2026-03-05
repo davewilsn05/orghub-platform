@@ -17,7 +17,7 @@ const ROLE_COLORS: Record<string, { bg: string; color: string }> = {
   member: { bg: "#f3f4f6", color: "#374151" },
 };
 
-export function MemberSearch({ members, orgSlug }: { members: Member[]; orgSlug: string }) {
+export function MemberSearch({ members, orgSlug, isAdmin = false }: { members: Member[]; orgSlug: string; isAdmin?: boolean }) {
   const [query, setQuery] = useState("");
 
   const filtered = query.trim()
@@ -43,7 +43,7 @@ export function MemberSearch({ members, orgSlug }: { members: Member[]; orgSlug:
       />
 
       {filtered.length === 0 ? (
-        <p style={{ color: "#9ca3af", textAlign: "center", padding: "2rem" }}>No members found.</p>
+        <p style={{ color: "#6b7280", textAlign: "center", padding: "2rem", fontStyle: "italic" }}>No members found.</p>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "1rem" }}>
           {filtered.map((m) => {
@@ -69,9 +69,11 @@ export function MemberSearch({ members, orgSlug }: { members: Member[]; orgSlug:
                     <div style={{ fontWeight: 700, fontSize: "0.9rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {m.full_name ?? "—"}
                     </div>
-                    <div style={{ fontSize: "0.78rem", color: "#9ca3af", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {m.email}
-                    </div>
+                    {isAdmin && (
+                      <div style={{ fontSize: "0.78rem", color: "#9ca3af", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {m.email}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>

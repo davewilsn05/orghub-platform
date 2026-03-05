@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 type OrgSettings = {
   name: string;
@@ -21,29 +21,43 @@ type OrgSettings = {
   stripe_webhook_secret: string | null;
 };
 
-export function SettingsForm({ initial }: { initial: OrgSettings }) {
+export function SettingsForm({ initial, orgSlug }: { initial: OrgSettings; orgSlug: string }) {
   const [form, setForm] = useState(initial);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleBeforeUnload = useCallback((e: BeforeUnloadEvent) => {
+    if (isDirty) e.preventDefault();
+  }, [isDirty]);
+
+  useEffect(() => {
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [handleBeforeUnload]);
 
   function set<K extends keyof OrgSettings>(key: K, val: OrgSettings[K]) {
     setForm((f) => ({ ...f, [key]: val }));
     setSaved(false);
+    setIsDirty(true);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    const trimmedForm = { ...form, name: form.name.trim() };
     const res = await fetch("/api/admin/settings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(trimmedForm),
     });
     const json = await res.json() as { error?: string };
     if (!res.ok) { setError(json.error ?? "Failed to save."); setLoading(false); return; }
+    setForm(trimmedForm);
     setSaved(true);
+    setIsDirty(false);
     setLoading(false);
   }
 
@@ -54,6 +68,8 @@ export function SettingsForm({ initial }: { initial: OrgSettings }) {
   const labelStyle: React.CSSProperties = {
     display: "block", fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.35rem",
   };
+
+  const isValidHex = (v: string | null) => !v || /^#[0-9a-fA-F]{6}$/.test(v);
 
   const FEATURES: { key: keyof OrgSettings; label: string }[] = [
     { key: "feature_events", label: "Events & RSVPs" },
@@ -91,9 +107,10 @@ export function SettingsForm({ initial }: { initial: OrgSettings }) {
               <input type="color" value={form.primary_color ?? "#3b82f6"}
                 onChange={(e) => set("primary_color", e.target.value)}
                 style={{ width: "40px", height: "36px", padding: "2px", border: "1px solid #d1d5db", borderRadius: "6px", cursor: "pointer" }} />
-              <input style={{ ...inputStyle, flex: 1 }} value={form.primary_color ?? ""}
+              <input style={{ ...inputStyle, flex: 1, borderColor: isValidHex(form.primary_color) ? "#d1d5db" : "#fca5a5" }} value={form.primary_color ?? ""}
                 onChange={(e) => set("primary_color", e.target.value)} placeholder="#3b82f6" />
             </div>
+            {!isValidHex(form.primary_color) && <p style={{ fontSize: "0.75rem", color: "#dc2626", margin: "0.25rem 0 0" }}>Enter a valid hex color (e.g. #3b82f6)</p>}
           </div>
           <div>
             <label style={labelStyle}>Secondary color</label>
@@ -101,9 +118,10 @@ export function SettingsForm({ initial }: { initial: OrgSettings }) {
               <input type="color" value={form.secondary_color ?? "#1e40af"}
                 onChange={(e) => set("secondary_color", e.target.value)}
                 style={{ width: "40px", height: "36px", padding: "2px", border: "1px solid #d1d5db", borderRadius: "6px", cursor: "pointer" }} />
-              <input style={{ ...inputStyle, flex: 1 }} value={form.secondary_color ?? ""}
+              <input style={{ ...inputStyle, flex: 1, borderColor: isValidHex(form.secondary_color) ? "#d1d5db" : "#fca5a5" }} value={form.secondary_color ?? ""}
                 onChange={(e) => set("secondary_color", e.target.value)} placeholder="#1e40af" />
             </div>
+            {!isValidHex(form.secondary_color) && <p style={{ fontSize: "0.75rem", color: "#dc2626", margin: "0.25rem 0 0" }}>Enter a valid hex color (e.g. #1e40af)</p>}
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
@@ -121,7 +139,7 @@ export function SettingsForm({ initial }: { initial: OrgSettings }) {
         {form.logo_url && (
           <div>
             <p style={{ fontSize: "0.78rem", color: "#9ca3af", marginBottom: "0.5rem" }}>Logo preview</p>
-            <img src={form.logo_url} alt="Logo preview" style={{ height: "48px", objectFit: "contain" }} />
+            <img src={form.logo_url} alt="Organization logo preview" style={{ maxHeight: "80px", maxWidth: "100%", objectFit: "contain" }} />
           </div>
         )}
       </Section>
@@ -130,7 +148,7 @@ export function SettingsForm({ initial }: { initial: OrgSettings }) {
       <Section title="Stripe Payments">
         <p style={{ fontSize: "0.82rem", color: "#9ca3af", marginTop: "-0.5rem", marginBottom: "0.75rem" }}>
           Paste your Stripe keys to enable online membership dues and event ticket sales.
-          Webhook URL: <code style={{ fontSize: "0.78rem", background: "#f3f4f6", padding: "1px 5px", borderRadius: "4px" }}>https://YOUR-SUBDOMAIN.orghub.app/api/stripe/webhook/YOUR-SLUG</code>
+          Webhook URL: <code style={{ fontSize: "0.78rem", background: "#f3f4f6", padding: "1px 5px", borderRadius: "4px" }}>https://{orgSlug}.orghub.app/api/stripe/webhook/{orgSlug}</code>
         </p>
         <div>
           <label style={labelStyle}>Publishable key (pk_…)</label>
@@ -179,6 +197,7 @@ export function SettingsForm({ initial }: { initial: OrgSettings }) {
           {loading ? "Saving…" : "Save settings"}
         </button>
         {saved && <span style={{ color: "#059669", fontSize: "0.875rem", fontWeight: 600 }}>✓ Saved</span>}
+        {isDirty && !saved && <span style={{ color: "#d97706", fontSize: "0.825rem" }}>Unsaved changes</span>}
       </div>
     </form>
   );

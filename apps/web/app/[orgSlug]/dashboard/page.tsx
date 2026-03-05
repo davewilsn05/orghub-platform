@@ -11,10 +11,10 @@ export default async function DashboardPage({ params }: Props) {
   const supabase = await createClient();
 
   // Fetch upcoming events (next 3)
-  type EventPreview = { id: string; title: string; start: string; location: string | null };
+  type EventPreview = { id: string; title: string; slug: string; start: string; location: string | null };
   const eventsResult = await supabase
     .from("events")
-    .select("id, title, start, location")
+    .select("id, title, slug, start, location")
     .eq("org_id", org.id)
     .eq("is_published", true)
     .gte("start", new Date().toISOString())
@@ -23,7 +23,7 @@ export default async function DashboardPage({ params }: Props) {
   const events = eventsResult.data as EventPreview[] | null;
 
   return (
-    <main style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
+    <main style={{ padding: "2rem 1rem", maxWidth: "1200px", margin: "0 auto" }}>
       <p style={{ fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.2em", color: "#888" }}>
         Members Portal
       </p>
@@ -32,31 +32,40 @@ export default async function DashboardPage({ params }: Props) {
       </h1>
 
       {/* Upcoming events strip */}
-      {events && events.length > 0 && (
+      {org.features.events && (
         <div style={{ marginBottom: "2.5rem" }}>
           <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.75rem", color: "#555" }}>
             UPCOMING EVENTS
           </h2>
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-            {events.map((ev) => (
-              <a
-                key={ev.id}
-                href={`/${orgSlug}/events`}
-                style={{
-                  display: "block", padding: "1rem 1.25rem",
-                  border: "1px solid #e5e7eb", borderRadius: "10px",
-                  background: "#fff", textDecoration: "none", color: "inherit",
-                  minWidth: "200px",
-                }}
-              >
-                <div style={{ fontSize: "0.75rem", color: "var(--org-primary)", fontWeight: 600, marginBottom: "0.25rem" }}>
-                  {new Date(ev.start).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                </div>
-                <div style={{ fontWeight: 600, marginBottom: "0.2rem" }}>{ev.title}</div>
-                {ev.location && <div style={{ fontSize: "0.8rem", color: "#888" }}>{ev.location}</div>}
+          {events && events.length > 0 ? (
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+              {events.map((ev) => (
+                <a
+                  key={ev.id}
+                  href={`/${orgSlug}/events/${ev.slug}`}
+                  style={{
+                    display: "block", padding: "1rem 1.25rem",
+                    border: "1px solid #e5e7eb", borderRadius: "10px",
+                    background: "#fff", textDecoration: "none", color: "inherit",
+                    minWidth: "200px",
+                  }}
+                >
+                  <div style={{ fontSize: "0.75rem", color: "var(--org-primary)", fontWeight: 600, marginBottom: "0.25rem" }}>
+                    {new Date(ev.start).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </div>
+                  <div style={{ fontWeight: 600, marginBottom: "0.2rem" }}>{ev.title}</div>
+                  {ev.location && <div style={{ fontSize: "0.8rem", color: "#888" }}>{ev.location}</div>}
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p style={{ color: "#9ca3af", fontSize: "0.875rem", margin: 0 }}>
+              No upcoming events scheduled.{" "}
+              <a href={`/${orgSlug}/events`} style={{ color: "var(--org-primary, #3b82f6)", fontWeight: 600, textDecoration: "none" }}>
+                View all events →
               </a>
-            ))}
-          </div>
+            </p>
+          )}
         </div>
       )}
 

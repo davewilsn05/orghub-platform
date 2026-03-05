@@ -1,5 +1,5 @@
 import { loadOrgConfig } from "@/lib/org/loader";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { MemberSearch } from "./MemberSearch";
 
 type Props = { params: Promise<{ orgSlug: string }> };
@@ -9,6 +9,9 @@ export const metadata = { title: "Members" };
 export default async function MembersPage({ params }: Props) {
   const { orgSlug } = await params;
   const org = await loadOrgConfig();
+  const authClient = await createClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  const isAdmin = ["admin", "board"].includes(user?.app_metadata?.org_role ?? "");
   const supabase = createServiceClient();
 
   const { data } = await supabase
@@ -25,7 +28,7 @@ export default async function MembersPage({ params }: Props) {
     <main style={{ padding: "2rem", maxWidth: "1000px", margin: "0 auto" }}>
       <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.25rem" }}>Member Directory</h1>
       <p style={{ color: "#6b7280", marginBottom: "2rem" }}>{members.length} active members · {org.name}</p>
-      <MemberSearch members={members} orgSlug={orgSlug} />
+      <MemberSearch members={members} orgSlug={orgSlug} isAdmin={isAdmin} />
     </main>
   );
 }

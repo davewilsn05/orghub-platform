@@ -8,6 +8,7 @@ export async function POST(req: NextRequest, { params }: Props) {
   const { eventId } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Please sign in to purchase tickets." }, { status: 401 });
 
   const service = createServiceClient();
   const { ticketTypeId, quantity = 1 } = await req.json() as {

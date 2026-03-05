@@ -5,7 +5,7 @@ type Props = { params: Promise<{ orgSlug: string }> };
 
 export const metadata = { title: "Newsletters" };
 
-type NL = { id: string; title: string; slug: string; published_at: string | null };
+type NL = { id: string; title: string; slug: string; published_at: string | null; content: { text?: string } | null };
 
 export default async function NewslettersPage({ params }: Props) {
   const { orgSlug } = await params;
@@ -14,7 +14,7 @@ export default async function NewslettersPage({ params }: Props) {
 
   const { data } = await supabase
     .from("newsletters")
-    .select("id, title, slug, published_at")
+    .select("id, title, slug, published_at, content")
     .eq("org_id", org.id)
     .in("status", ["published", "sent"])
     .order("published_at", { ascending: false });
@@ -32,15 +32,22 @@ export default async function NewslettersPage({ params }: Props) {
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           {newsletters.map((nl) => (
             <a key={nl.id} href={`/${orgSlug}/newsletters/${nl.id}`} style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
+              display: "block",
               padding: "1.1rem 1.25rem", background: "#fff",
               border: "1px solid #e5e7eb", borderRadius: "10px",
               textDecoration: "none", color: "inherit",
             }}>
-              <span style={{ fontWeight: 600 }}>{nl.title}</span>
-              <span style={{ fontSize: "0.82rem", color: "#9ca3af" }}>
-                {nl.published_at ? new Date(nl.published_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : ""}
-              </span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: nl.content?.text ? "0.4rem" : 0 }}>
+                <span style={{ fontWeight: 600 }}>{nl.title}</span>
+                <span style={{ fontSize: "0.82rem", color: "#9ca3af", flexShrink: 0, marginLeft: "1rem" }}>
+                  {nl.published_at ? new Date(nl.published_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : ""}
+                </span>
+              </div>
+              {nl.content?.text && (
+                <p style={{ margin: 0, fontSize: "0.825rem", color: "#6b7280", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                  {nl.content.text.slice(0, 160)}
+                </p>
+              )}
             </a>
           ))}
         </div>

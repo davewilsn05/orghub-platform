@@ -63,7 +63,7 @@ export async function POST(request: Request) {
   const inv = invite as { id: string; token: string; email: string; role: string; expires_at: string };
 
   // Send invite email if SendGrid is configured
-  if (process.env.SENDGRID_API_KEY) {
+  if (process.env.RESEND_API_KEY) {
     try {
       const { data: org } = await service.from("organizations").select("name, slug").eq("id", orgId).maybeSingle();
       if (org) {

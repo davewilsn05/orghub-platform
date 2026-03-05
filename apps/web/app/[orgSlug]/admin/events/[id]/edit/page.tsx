@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { loadOrgConfig } from "@/lib/org/loader";
 import { createServiceClient } from "@/lib/supabase/server";
 import { EventForm } from "../../EventForm";
+import { DeleteEventButton } from "./DeleteEventButton";
 
 type Props = { params: Promise<{ orgSlug: string; id: string }> };
 
@@ -49,23 +50,3 @@ export default async function EditEventPage({ params }: Props) {
   );
 }
 
-function DeleteEventButton({ eventId, orgSlug }: { eventId: string; orgSlug: string }) {
-  return (
-    <form action={`/api/admin/events/${eventId}`} method="POST">
-      <input type="hidden" name="_method" value="DELETE" />
-      <button
-        type="submit"
-        onClick={(e) => {
-          if (!confirm("Delete this event? This cannot be undone.")) e.preventDefault();
-        }}
-        style={{
-          padding: "0.5rem 1rem", background: "#fff", border: "1px solid #fca5a5",
-          borderRadius: "7px", color: "#dc2626", fontWeight: 600,
-          fontSize: "0.825rem", cursor: "pointer",
-        }}
-      >
-        Delete event
-      </button>
-    </form>
-  );
-}

@@ -39,7 +39,7 @@ export default async function EventsPage({ params }: Props) {
   const past = pastResult.data as EventRow[] | null;
 
   return (
-    <main style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
+    <main style={{ padding: "2rem 1rem", maxWidth: "900px", margin: "0 auto" }}>
       <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.25rem" }}>Events</h1>
       <p style={{ color: "#6b7280", marginBottom: "1rem" }}>{org.name}</p>
 
@@ -100,8 +100,8 @@ function EventRow({
   return (
     <a href={`/${orgSlug}/events/${event.slug}`} style={{
       display: "flex",
-      gap: "1.25rem",
-      padding: "1.25rem",
+      gap: "0.75rem",
+      padding: "1rem",
       background: "#fff",
       border: "1px solid #e5e7eb",
       borderRadius: "12px",

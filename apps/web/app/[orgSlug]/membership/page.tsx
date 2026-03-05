@@ -25,6 +25,16 @@ export default function MembershipPage() {
   const success = searchParams.get("success") === "1";
   const canceled = searchParams.get("canceled") === "1";
 
+  const [showSuccess, setShowSuccess] = useState(success);
+  const [showCanceled, setShowCanceled] = useState(canceled);
+
+  useEffect(() => {
+    if (success) { const t = setTimeout(() => setShowSuccess(false), 6000); return () => clearTimeout(t); }
+  }, [success]);
+  useEffect(() => {
+    if (canceled) { const t = setTimeout(() => setShowCanceled(false), 6000); return () => clearTimeout(t); }
+  }, [canceled]);
+
   const [sub, setSub] = useState<Subscription>(null);
   const [duesPaidThrough, setDuesPaidThrough] = useState<string | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -91,14 +101,16 @@ export default function MembershipPage() {
         Manage your membership and billing.
       </p>
 
-      {success && (
-        <div style={{ padding: "0.875rem 1rem", background: "#d1fae5", border: "1px solid #6ee7b7", borderRadius: "10px", color: "#065f46", fontWeight: 600, marginBottom: "1.5rem" }}>
-          Payment successful — your membership is now active!
+      {showSuccess && (
+        <div style={{ padding: "0.875rem 1rem", background: "#d1fae5", border: "1px solid #6ee7b7", borderRadius: "10px", color: "#065f46", fontWeight: 600, marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Payment successful — your membership is now active!</span>
+          <button onClick={() => setShowSuccess(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#065f46", fontWeight: 700, fontSize: "1rem", padding: 0, lineHeight: 1 }}>×</button>
         </div>
       )}
-      {canceled && (
-        <div style={{ padding: "0.875rem 1rem", background: "#fef3c7", border: "1px solid #fde68a", borderRadius: "10px", color: "#92400e", marginBottom: "1.5rem" }}>
-          Checkout was canceled. Your membership was not charged.
+      {showCanceled && (
+        <div style={{ padding: "0.875rem 1rem", background: "#fef3c7", border: "1px solid #fde68a", borderRadius: "10px", color: "#92400e", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>Checkout was canceled. Your membership was not charged.</span>
+          <button onClick={() => setShowCanceled(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#92400e", fontWeight: 700, fontSize: "1rem", padding: 0, lineHeight: 1 }}>×</button>
         </div>
       )}
       {error && (

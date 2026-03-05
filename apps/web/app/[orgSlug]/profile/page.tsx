@@ -1,16 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-
-type Plan = {
-  id: string;
-  name: string;
-  description: string | null;
-  price_cents: number;
-  interval: string;
-  stripe_price_id: string | null;
-};
 
 type Subscription = {
   id: string;
@@ -20,58 +11,81 @@ type Subscription = {
   membership_plans: { name: string; price_cents: number; interval: string } | null;
 } | null;
 
+type Profile = {
+  id: string;
+  full_name: string | null;
+  email: string;
+  role: string;
+  joined_at: string | null;
+  created_at: string;
+} | null;
+
 export default function ProfilePage() {
   const searchParams = useSearchParams();
   const success = searchParams.get("success") === "1";
   const canceled = searchParams.get("canceled") === "1";
 
+  const [profile, setProfile] = useState<Profile>(null);
+  const [editName, setEditName] = useState("");
+  const [isDirty, setIsDirty] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
   const [sub, setSub] = useState<Subscription>(null);
   const [duesPaidThrough, setDuesPaidThrough] = useState<string | null>(null);
-  const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const handleBeforeUnload = useCallback((e: BeforeUnloadEvent) => {
+    if (isDirty) e.preventDefault();
+  }, [isDirty]);
+
+  useEffect(() => {
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [handleBeforeUnload]);
 
   useEffect(() => {
     async function load() {
-      const [subRes, plansRes] = await Promise.all([
+      const [profileRes, subRes] = await Promise.all([
+        fetch("/api/profile"),
         fetch("/api/membership/subscription"),
-        fetch("/api/admin/membership-plans"),
       ]);
+      if (profileRes.ok) {
+        const json = await profileRes.json() as { profile: Profile };
+        setProfile(json.profile);
+        setEditName(json.profile?.full_name ?? "");
+      }
       if (subRes.ok) {
         const json = await subRes.json() as { subscription: Subscription; dues_paid_through: string | null };
         setSub(json.subscription);
         setDuesPaidThrough(json.dues_paid_through);
-      }
-      if (plansRes.ok) {
-        const json = await plansRes.json() as { plans: Plan[] };
-        setPlans(json.plans.filter((p) => p.stripe_price_id));
       }
       setLoading(false);
     }
     void load();
   }, []);
 
-  async function handleSubscribe(planId: string) {
-    setActionLoading(true);
-    setError(null);
-    const res = await fetch("/api/checkout/membership", {
-      method: "POST",
+  async function handleSaveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingProfile(true);
+    setProfileError(null);
+    setProfileSaved(false);
+    const res = await fetch("/api/profile", {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ planId }),
+      body: JSON.stringify({ full_name: editName }),
     });
-    const json = await res.json() as { url?: string; error?: string };
-    if (!res.ok || !json.url) { setError(json.error ?? "Failed to start checkout."); setActionLoading(false); return; }
-    window.location.href = json.url;
-  }
-
-  async function handleManageBilling() {
-    setActionLoading(true);
-    setError(null);
-    const res = await fetch("/api/billing/portal", { method: "POST" });
-    const json = await res.json() as { url?: string; error?: string };
-    if (!res.ok || !json.url) { setError(json.error ?? "Failed to open billing portal."); setActionLoading(false); return; }
-    window.location.href = json.url;
+    const json = await res.json() as { error?: string };
+    if (!res.ok) {
+      setProfileError(json.error ?? "Failed to save.");
+    } else {
+      setProfile((p) => p ? { ...p, full_name: editName } : p);
+      setIsDirty(false);
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 5000);
+    }
+    setSavingProfile(false);
   }
 
   const isActive = sub?.status === "active" || sub?.status === "trialing";
@@ -79,11 +93,38 @@ export default function ProfilePage() {
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%", padding: "0.6rem 0.875rem",
+    border: "1px solid #d1d5db", borderRadius: "8px",
+    fontSize: "0.9rem", boxSizing: "border-box", outline: "none",
+  };
+
   return (
     <main style={{ padding: "2rem", maxWidth: "640px", margin: "0 auto" }}>
+      {/* Avatar */}
+      {!loading && profile && (() => {
+        const name = profile.full_name ?? profile.email;
+        const initials = name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2);
+        return (
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.75rem" }}>
+            <div style={{
+              width: "56px", height: "56px", borderRadius: "50%",
+              background: "var(--org-primary, #3b82f6)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#fff", fontWeight: 800, fontSize: "1.2rem", flexShrink: 0,
+            }}>
+              {initials}
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "1.05rem" }}>{profile.full_name ?? "—"}</div>
+              <div style={{ color: "#6b7280", fontSize: "0.875rem" }}>{profile.email}</div>
+            </div>
+          </div>
+        );
+      })()}
       <h1 style={{ fontSize: "1.75rem", fontWeight: 800, marginBottom: "0.5rem" }}>My Profile</h1>
       <p style={{ color: "#6b7280", fontSize: "0.875rem", marginBottom: "2rem" }}>
-        Manage your membership and billing.
+        Manage your account and membership.
       </p>
 
       {success && (
@@ -96,11 +137,59 @@ export default function ProfilePage() {
           Checkout was canceled. Your membership was not charged.
         </div>
       )}
-      {error && (
-        <div style={{ padding: "0.875rem 1rem", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", color: "#b91c1c", marginBottom: "1.5rem" }}>
-          {error}
-        </div>
-      )}
+      {/* Account info */}
+      <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem" }}>
+        <h2 style={{ fontSize: "0.9rem", fontWeight: 700, margin: "0 0 1rem" }}>Account</h2>
+        {loading ? (
+          <div style={{ color: "#9ca3af" }}>Loading…</div>
+        ) : (
+          <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div>
+              <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.35rem" }}>
+                Display name
+              </label>
+              <input
+                style={inputStyle}
+                value={editName}
+                onChange={(e) => { setEditName(e.target.value); setIsDirty(true); }}
+                placeholder="Your name"
+                required
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.35rem" }}>
+                Email
+              </label>
+              <div style={{ padding: "0.6rem 0.875rem", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "8px", fontSize: "0.9rem", color: "#6b7280" }}>
+                {profile?.email ?? "—"}
+              </div>
+            </div>
+            {profileError && (
+              <div style={{ fontSize: "0.825rem", color: "#b91c1c" }}>{profileError}</div>
+            )}
+            {profileSaved && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.825rem", color: "#059669", fontWeight: 600, background: "#d1fae5", border: "1px solid #6ee7b7", borderRadius: "6px", padding: "0.5rem 0.75rem" }}>
+                <span>✓ Name updated.</span>
+                <button onClick={() => setProfileSaved(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#059669", fontWeight: 700, fontSize: "0.875rem", padding: 0, lineHeight: 1 }}>×</button>
+              </div>
+            )}
+            <div>
+              <button
+                type="submit"
+                disabled={savingProfile || !editName.trim()}
+                style={{
+                  padding: "0.55rem 1.25rem", background: "var(--org-primary, #3b82f6)",
+                  color: "#fff", border: "none", borderRadius: "7px",
+                  fontWeight: 600, fontSize: "0.875rem",
+                  cursor: savingProfile ? "not-allowed" : "pointer", opacity: savingProfile ? 0.7 : 1,
+                }}
+              >
+                {savingProfile ? "Saving…" : "Save name"}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
 
       {/* Membership status */}
       <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "12px", padding: "1.5rem", marginBottom: "1.5rem" }}>
@@ -128,6 +217,13 @@ export default function ProfilePage() {
                     {sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}
                   </span>
                 </div>
+                {isPastDue && (
+                  <div style={{ fontSize: "0.8rem", color: "#b45309", background: "#fef3c7", border: "1px solid #fde68a", borderRadius: "6px", padding: "0.5rem 0.75rem" }}>
+                    Your payment method needs attention.{" "}
+                    <a href="membership" style={{ color: "#b45309", fontWeight: 700 }}>Update your billing</a>{" "}
+                    to avoid service interruption.
+                  </div>
+                )}
                 {sub.membership_plans && (
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
                     <span style={{ color: "#6b7280" }}>Plan</span>
@@ -148,53 +244,18 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Actions */}
-      {!loading && sub?.stripe_customer_id && isActive ? (
-        <button onClick={handleManageBilling} disabled={actionLoading} style={{
-          padding: "0.8rem 2rem", background: "var(--org-primary, #3b82f6)",
-          color: "#fff", border: "none", borderRadius: "9px",
-          fontWeight: 700, fontSize: "0.95rem",
-          cursor: actionLoading ? "not-allowed" : "pointer", opacity: actionLoading ? 0.7 : 1,
+      {/* Membership link */}
+      {!loading && (
+        <a href="membership" style={{
+          display: "inline-flex", alignItems: "center", gap: "0.4rem",
+          padding: "0.7rem 1.5rem",
+          background: "var(--org-primary, #3b82f6)", color: "#fff",
+          borderRadius: "9px", fontWeight: 700, fontSize: "0.9rem",
+          textDecoration: "none",
         }}>
-          {actionLoading ? "Opening…" : "Manage billing →"}
-        </button>
-      ) : !loading && plans.length > 0 ? (
-        <div>
-          <h2 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "1rem" }}>Available plans</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            {plans.map((plan) => (
-              <div key={plan.id} style={{
-                background: "#fff", border: "1px solid #e5e7eb", borderRadius: "12px",
-                padding: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center",
-              }}>
-                <div>
-                  <div style={{ fontWeight: 700 }}>{plan.name}</div>
-                  {plan.description && <div style={{ color: "#6b7280", fontSize: "0.825rem", marginTop: "0.2rem" }}>{plan.description}</div>}
-                  <div style={{ color: "var(--org-primary, #3b82f6)", fontWeight: 700, marginTop: "0.35rem" }}>
-                    ${(plan.price_cents / 100).toFixed(2)} / {plan.interval}
-                  </div>
-                </div>
-                <button onClick={() => handleSubscribe(plan.id)} disabled={actionLoading} style={{
-                  padding: "0.6rem 1.25rem", background: "var(--org-primary, #3b82f6)",
-                  color: "#fff", border: "none", borderRadius: "8px",
-                  fontWeight: 700, fontSize: "0.875rem",
-                  cursor: actionLoading ? "not-allowed" : "pointer", opacity: actionLoading ? 0.7 : 1,
-                  whiteSpace: "nowrap",
-                }}>
-                  Subscribe →
-                </button>
-              </div>
-            ))}
-          </div>
-          <p style={{ marginTop: 12, fontSize: 13, color: "#9ca3af" }}>
-            Secure checkout powered by Stripe.
-          </p>
-        </div>
-      ) : !loading ? (
-        <div style={{ color: "#9ca3af", fontSize: "0.875rem" }}>
-          No membership plans are currently available. Contact your administrator.
-        </div>
-      ) : null}
+          {isActive ? "Manage membership →" : "View membership plans →"}
+        </a>
+      )}
     </main>
   );
 }

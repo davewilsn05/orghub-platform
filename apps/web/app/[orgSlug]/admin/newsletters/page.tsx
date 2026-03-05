@@ -31,7 +31,12 @@ export default async function AdminNewslettersPage({ params }: Props) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.75rem" }}>
         <div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 800, margin: 0 }}>Newsletters</h1>
-          <p style={{ color: "#6b7280", fontSize: "0.875rem", marginTop: "0.25rem" }}>{newsletters.length} total</p>
+          <p style={{ color: "#6b7280", fontSize: "0.875rem", marginTop: "0.25rem" }}>
+            {newsletters.length} total
+            <span style={{ marginLeft: "1rem", fontSize: "0.78rem", color: "#9ca3af" }}>
+              Draft = saved · Published = visible to members · Sent = emailed to members
+            </span>
+          </p>
         </div>
         <a href={`/${orgSlug}/admin/newsletters/new`} style={{
           display: "inline-flex", alignItems: "center", gap: "0.4rem",

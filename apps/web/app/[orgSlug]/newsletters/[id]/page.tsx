@@ -42,7 +42,7 @@ export default async function NewsletterPage({ params }: Props) {
           whiteSpace: "pre-wrap",
           borderTop: "1px solid #e5e7eb", paddingTop: "1.5rem",
         }}>
-          {body || <em style={{ color: "#9ca3af" }}>No content.</em>}
+          {body || <em style={{ color: "#9ca3af" }}>{nl.status === "sent" ? "This newsletter was sent with no body content." : "This issue has no content yet."}</em>}
         </div>
       </div>
     </main>

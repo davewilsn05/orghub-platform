@@ -26,14 +26,25 @@ export function TicketSection({ eventId }: { eventId: string }) {
         setTypes(withStripe);
         if (withStripe.length > 0) setSelected(withStripe[0].id);
       })
-      .catch(() => {/* no tickets */})
+      .catch(() => { setError("Failed to load ticket information."); })
       .finally(() => setLoading(false));
   }, [eventId]);
 
-  if (loading || types.length === 0) return null;
+  if (loading) return null;
+  if (error && types.length === 0) {
+    return (
+      <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "12px", padding: "1.25rem", marginBottom: "1.5rem" }}>
+        <div style={{ padding: "0.6rem 0.875rem", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", color: "#b91c1c", fontSize: "0.825rem" }}>
+          {error}
+        </div>
+      </div>
+    );
+  }
+  if (types.length === 0) return null;
 
   const selectedType = types.find((t) => t.id === selected) ?? types[0];
   const totalCents = selectedType.price_cents * quantity;
+  const atMax = selectedType.quantity_available !== null && quantity >= selectedType.quantity_available;
 
   async function handleCheckout() {
     setChecking(true);
@@ -69,7 +80,7 @@ export function TicketSection({ eventId }: { eventId: string }) {
           </label>
           <select
             value={selected}
-            onChange={(e) => setSelected(e.target.value)}
+            onChange={(e) => { setSelected(e.target.value); setError(null); }}
             style={{ width: "100%", padding: "0.6rem 0.875rem", border: "1px solid #d1d5db", borderRadius: "8px", fontSize: "0.9rem", background: "#fff" }}
           >
             {types.map((t) => (
@@ -85,13 +96,21 @@ export function TicketSection({ eventId }: { eventId: string }) {
         <div>
           <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "#374151", marginBottom: "0.35rem" }}>
             Quantity
+            {selectedType.quantity_available !== null && (
+              <span style={{ fontWeight: 400, color: "#9ca3af", marginLeft: "0.4rem" }}>
+                (limit: {selectedType.quantity_available})
+              </span>
+            )}
           </label>
           <input
-            type="number" min={1} max={selectedType.quantity_available ?? 20}
+            type="number" min={1} max={selectedType.quantity_available ?? undefined}
             value={quantity}
-            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
-            style={{ width: "80px", padding: "0.6rem 0.875rem", border: "1px solid #d1d5db", borderRadius: "8px", fontSize: "0.9rem" }}
+            onChange={(e) => { const v = Math.max(1, parseInt(e.target.value, 10) || 1); setQuantity(selectedType.quantity_available !== null ? Math.min(selectedType.quantity_available, v) : v); setError(null); }}
+            style={{ width: "80px", padding: "0.6rem 0.875rem", border: `1px solid ${atMax ? "#fca5a5" : "#d1d5db"}`, borderRadius: "8px", fontSize: "0.9rem" }}
           />
+          {atMax && (
+            <p style={{ fontSize: "0.75rem", color: "#dc2626", margin: "0.25rem 0 0" }}>Maximum quantity reached</p>
+          )}
         </div>
         <div style={{ marginTop: "1.4rem", fontSize: "0.95rem", fontWeight: 700, color: "var(--org-primary, #3b82f6)" }}>
           ${(totalCents / 100).toFixed(2)} total
@@ -108,7 +127,7 @@ export function TicketSection({ eventId }: { eventId: string }) {
           cursor: checking ? "not-allowed" : "pointer", opacity: checking ? 0.7 : 1,
         }}
       >
-        {checking ? "Redirecting…" : `Buy ${quantity > 1 ? `${quantity} ` : ""}ticket${quantity !== 1 ? "s" : ""} →`}
+        {checking ? "Redirecting…" : `Buy ${quantity} ticket${quantity !== 1 ? "s" : ""} →`}
       </button>
     </div>
   );

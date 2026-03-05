@@ -15,9 +15,18 @@ type Props = { orgSlug: string; onCreated: (invite: CreatedInvite) => void };
 
 export function InviteForm({ orgSlug, onCreated }: Props) {
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [role, setRole] = useState("member");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function validateEmail(val: string) {
+    if (val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+      setEmailError("Please enter a valid email address.");
+    } else {
+      setEmailError(null);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,14 +77,20 @@ export function InviteForm({ orgSlug, onCreated }: Props) {
           <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: "0.35rem" }}>
             Email address
           </label>
-          <input style={inputStyle} type="email" required value={email}
-            onChange={(e) => setEmail(e.target.value)} placeholder="jane@example.com" />
+          <input
+            style={{ ...inputStyle, borderColor: emailError ? "#fca5a5" : "#d1d5db" }}
+            type="email" required autoFocus value={email}
+            onChange={(e) => { setEmail(e.target.value); if (emailError) validateEmail(e.target.value); }}
+            onBlur={(e) => validateEmail(e.target.value)}
+            placeholder="jane@example.com"
+          />
+          {emailError && <p style={{ fontSize: "0.75rem", color: "#dc2626", margin: "0.25rem 0 0" }}>{emailError}</p>}
         </div>
         <div>
           <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "#374151", marginBottom: "0.35rem" }}>
             Role
           </label>
-          <select style={{ ...inputStyle, width: "auto" }} value={role} onChange={(e) => setRole(e.target.value)}>
+          <select style={{ ...inputStyle, width: "100%", minWidth: "140px" }} value={role} onChange={(e) => setRole(e.target.value)}>
             {ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
           </select>
         </div>

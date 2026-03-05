@@ -1,5 +1,4 @@
 import { loadOrgConfig } from "@/lib/org/loader";
-import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server";
 
 type Props = { params: Promise<{ orgSlug: string }> };

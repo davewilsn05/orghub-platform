@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 
 type Props = {
   params: Promise<{ orgSlug: string }>;
+  searchParams: Promise<{ redirect?: string }>;
 };
 
 export async function generateMetadata({ params }: Props) {
@@ -12,8 +13,9 @@ export async function generateMetadata({ params }: Props) {
   return { title: `Sign in — ${orgSlug}` };
 }
 
-export default async function LoginPage({ params }: Props) {
+export default async function LoginPage({ params, searchParams }: Props) {
   const { orgSlug } = await params;
+  const { redirect: redirectTo } = await searchParams;
   const org = await loadOrgConfig();
 
   // Already logged in — send to dashboard
@@ -70,6 +72,7 @@ export default async function LoginPage({ params }: Props) {
           orgName={org.name}
           primaryColor={org.branding.primaryColor}
           orgSlug={orgSlug}
+          redirectTo={redirectTo}
         />
       </div>
     </div>
