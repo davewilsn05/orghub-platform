@@ -74,6 +74,11 @@ export default async function LoginPage({ params, searchParams }: Props) {
           orgSlug={orgSlug}
           redirectTo={redirectTo}
         />
+        <div style={{ textAlign: "center", marginTop: "1rem" }}>
+          <a href="/privacy" style={{ color: "#9ca3af", fontSize: "0.75rem" }}>
+            Privacy Policy
+          </a>
+        </div>
       </div>
     </div>
   );
