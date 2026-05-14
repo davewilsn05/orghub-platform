@@ -11,6 +11,8 @@ const SUPPORTED_TYPES: Record<string, string> = {
   "application/rtf": "rtf",
   "application/pdf": "pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+  "application/vnd.ms-excel": "xls",
 };
 
 function getFileType(file: File): string | null {
@@ -18,7 +20,7 @@ function getFileType(file: File): string | null {
   if (fromMime) return fromMime;
 
   const ext = file.name.split(".").pop()?.toLowerCase();
-  if (ext && ["txt", "rtf", "pdf", "docx"].includes(ext)) return ext;
+  if (ext && ["txt", "rtf", "pdf", "docx", "xlsx", "xls"].includes(ext)) return ext;
 
   return null;
 }
@@ -158,6 +160,24 @@ async function parseDocx(buffer: Buffer): Promise<string> {
   return result.value.trim();
 }
 
+async function parseXlsx(buffer: Buffer): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const XLSX = require("xlsx");
+  const workbook = XLSX.read(buffer, { type: "buffer" });
+  const lines: string[] = [];
+
+  for (const sheetName of workbook.SheetNames as string[]) {
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) continue;
+    lines.push(`--- ${sheetName} ---`);
+    const csv: string = XLSX.utils.sheet_to_csv(sheet);
+    lines.push(csv.trim());
+    lines.push("");
+  }
+
+  return lines.join("\n").trim();
+}
+
 export type ParseResult =
   | { ok: true; text: string; fileName: string; fileType: string }
   | { ok: false; error: string };
@@ -169,7 +189,7 @@ export async function parseDocument(file: File): Promise<ParseResult> {
 
   const fileType = getFileType(file);
   if (!fileType) {
-    return { ok: false, error: `Unsupported file type: ${file.type || file.name.split(".").pop()}. Supported: .txt, .rtf, .pdf, .docx` };
+    return { ok: false, error: `Unsupported file type: ${file.type || file.name.split(".").pop()}. Supported: .txt, .rtf, .pdf, .docx, .xlsx, .xls` };
   }
 
   try {
@@ -189,6 +209,10 @@ export async function parseDocument(file: File): Promise<ParseResult> {
         break;
       case "docx":
         text = await parseDocx(buffer);
+        break;
+      case "xlsx":
+      case "xls":
+        text = await parseXlsx(buffer);
         break;
       default:
         return { ok: false, error: `Unsupported file type: ${fileType}` };

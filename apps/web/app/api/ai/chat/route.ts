@@ -253,13 +253,18 @@ async function executeServerTool(
       if (upcomingOnly && !startDate)
         query = query.gte("start", new Date().toISOString());
       if (category) query = query.ilike("category", `%${category}%`);
-      if (search)
-        query = query.or(
-          `title.ilike.%${search}%,description.ilike.%${search}%`
-        );
+      if (search) {
+        // Sanitize search input to prevent filter injection via .or() string interpolation
+        const sanitized = search.replace(/[%_.,()]/g, "");
+        if (sanitized) {
+          query = query.or(
+            `title.ilike.%${sanitized}%,description.ilike.%${sanitized}%`
+          );
+        }
+      }
 
       const { data, error } = await query;
-      if (error) return `Error querying events: ${error.message}`;
+      if (error) return "Unable to search events right now.";
       if (!data || data.length === 0)
         return "No events found matching those criteria.";
 

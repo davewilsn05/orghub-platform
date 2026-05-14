@@ -487,7 +487,7 @@ function Pricing({ appUrl }: { appUrl: string }) {
       <SectionLabel>Pricing</SectionLabel>
       <h2 style={{ ...sectionHeading, textAlign: "center" }}>Simple, honest pricing</h2>
       <p style={{ ...sectionSubtext, textAlign: "center" }}>
-        Free forever for small orgs who self-host. Managed hosting if you want zero maintenance.
+        Self-hosted plans start at $39 per org. Managed hosting is $79 per org if you want zero maintenance.
       </p>
 
       <div style={{
@@ -688,8 +688,8 @@ const FEATURES = [
 const PLANS = [
   {
     name: "Self-hosted",
-    price: "Free",
-    period: " forever",
+    price: "$39",
+    period: "/mo per org",
     desc: "Run OrgHub on your own Supabase project and server.",
     featured: false,
     cta: "Get the code",
@@ -704,7 +704,7 @@ const PLANS = [
   },
   {
     name: "Managed",
-    price: "$49",
+    price: "$79",
     period: "/mo per org",
     desc: "We run it. You focus on your members.",
     featured: true,

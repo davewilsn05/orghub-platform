@@ -1,7 +1,18 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { checkRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
+  // Rate limit: 5 per minute per IP
+  const ip = getRateLimitIdentifier(request);
+  const rl = checkRateLimit(`register:${ip}`, 5, 60000);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
+  }
+
   const body = await request.json() as {
     adminName: string;
     email: string;
@@ -51,8 +62,9 @@ export async function POST(request: Request) {
   });
 
   if (authError || !authData.user) {
+    console.error("[register] auth error:", authError?.message);
     return NextResponse.json(
-      { error: authError?.message ?? "Failed to create account." },
+      { error: "Failed to create account." },
       { status: 400 }
     );
   }

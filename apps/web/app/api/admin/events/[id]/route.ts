@@ -48,7 +48,10 @@ export async function PATCH(request: Request, { params }: Params) {
     })
     .eq("id", id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("[admin/events] update error:", error.message);
+    return NextResponse.json({ error: "Failed to update event" }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }
@@ -81,7 +84,10 @@ export async function DELETE(_request: Request, { params }: Params) {
 
   const { error } = await service.from("events").delete().eq("id", id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("[admin/events] delete error:", error.message);
+    return NextResponse.json({ error: "Failed to delete event" }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }
