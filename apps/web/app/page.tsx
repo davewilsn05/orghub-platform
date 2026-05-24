@@ -1,4 +1,20 @@
-export const metadata = { title: "OrgHub — The member portal every nonprofit deserves" };
+export const metadata = {
+  title: "OrgHub — The member portal every nonprofit deserves",
+  description:
+    "Events, committees, newsletters, and messaging — plus an AI admin assistant. Each org gets a fully branded portal in minutes.",
+  openGraph: {
+    title: "OrgHub — The member portal every nonprofit deserves",
+    description:
+      "Events, committees, newsletters, and messaging — plus an AI admin assistant. Each org gets a fully branded portal in minutes.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "OrgHub — The member portal every nonprofit deserves",
+    description:
+      "Events, committees, newsletters, and messaging — plus an AI admin assistant. Each org gets a fully branded portal in minutes.",
+  },
+};
 
 const APP_URL = "";
 
