@@ -1,4 +1,7 @@
 export const metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://orghub-platform.vercel.app"
+  ),
   title: "OrgHub — The member portal every nonprofit deserves",
   description:
     "Events, committees, newsletters, and messaging — plus an AI admin assistant. Each org gets a fully branded portal in minutes.",
