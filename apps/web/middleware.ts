@@ -12,7 +12,7 @@ const PUBLIC_PATHS = new Set(["/login", "/auth/callback", "/auth/signout", "/joi
  * Top-level paths that bypass org-slug routing entirely.
  * These are platform-level pages (registration, marketing redirects).
  */
-const PLATFORM_PATHS = new Set(["/register"]);
+const PLATFORM_PATHS = new Set(["/", "/register", "/privacy"]);
 
 /**
  * Subdomain-based multi-tenant routing + auth protection.
@@ -52,7 +52,8 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!orgSlug || orgSlug === "www") {
-    return NextResponse.redirect(new URL("/register", request.url));
+    if (url.pathname === "/") return NextResponse.next();
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   // --- Auth check (skip for public paths) ---

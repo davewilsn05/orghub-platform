@@ -37,7 +37,7 @@ export default function RegisterPage() {
 
       <p style={{ marginTop: "1.5rem", color: "#555", fontSize: "0.85rem" }}>
         Already have a portal?{" "}
-        <a href="/" style={{ color: "#3b82f6" }}>Sign in</a>
+        <a href="/" style={{ color: "#3b82f6" }}>Back to home</a>
       </p>
       <p style={{ marginTop: "0.5rem", color: "#555", fontSize: "0.75rem" }}>
         <a href="/privacy" style={{ color: "#888" }}>Privacy Policy</a>
