@@ -36,9 +36,7 @@ export async function middleware(request: NextRequest) {
   // --- Resolve org slug ---
   let orgSlug: string | null = null;
 
-  if (process.env.NODE_ENV === "development") {
-    orgSlug = url.searchParams.get("org");
-  }
+  orgSlug = url.searchParams.get("org");
 
   if (!orgSlug && hostname.endsWith(`.${ROOT_DOMAIN}`)) {
     orgSlug = hostname.replace(`.${ROOT_DOMAIN}`, "");
@@ -54,11 +52,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!orgSlug || orgSlug === "www") {
-    // In dev, redirect to /register so localhost:3000 is useful without ?org=
-    if (process.env.NODE_ENV === "development") {
-      return NextResponse.redirect(new URL("/register", request.url));
-    }
-    return NextResponse.redirect(new URL(`https://www.${ROOT_DOMAIN}`));
+    return NextResponse.redirect(new URL("/register", request.url));
   }
 
   // --- Auth check (skip for public paths) ---
@@ -98,9 +92,7 @@ export async function middleware(request: NextRequest) {
       // Redirect to login, preserving org context
       const loginUrl = new URL(request.url);
       loginUrl.pathname = "/login";
-      if (process.env.NODE_ENV === "development") {
-        loginUrl.searchParams.set("org", orgSlug);
-      }
+      loginUrl.searchParams.set("org", orgSlug);
       return NextResponse.redirect(loginUrl);
     }
   }
