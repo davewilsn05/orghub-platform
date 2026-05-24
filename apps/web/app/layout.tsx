@@ -5,6 +5,10 @@ import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const org = await loadOrgConfig();
+  // Only apply org branding when inside a real org context (not the fallback)
+  if (org.id === "00000000-0000-0000-0000-000000000000") {
+    return {};
+  }
   return {
     title: { default: org.name, template: `%s | ${org.name}` },
     description: `${org.name} member portal`,

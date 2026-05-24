@@ -28,7 +28,9 @@ export async function middleware(request: NextRequest) {
   if (
     url.pathname.startsWith("/_next") ||
     url.pathname.startsWith("/api/") ||
-    url.pathname === "/favicon.ico"
+    url.pathname === "/favicon.ico" ||
+    url.pathname === "/opengraph-image" ||
+    url.pathname === "/twitter-image"
   ) {
     return NextResponse.next();
   }
