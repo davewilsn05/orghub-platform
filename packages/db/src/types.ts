@@ -728,6 +728,118 @@ export type Database = {
           },
         ]
       }
+      event_ticket_types: {
+        Row: {
+          id: string
+          org_id: string
+          event_id: string
+          name: string
+          description: string | null
+          price_cents: number
+          quantity_total: number | null
+          quantity_sold: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          event_id: string
+          name: string
+          description?: string | null
+          price_cents: number
+          quantity_total?: number | null
+          quantity_sold?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          org_id?: string
+          event_id?: string
+          name?: string
+          description?: string | null
+          price_cents?: number
+          quantity_total?: number | null
+          quantity_sold?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_ticket_types_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_ticket_types_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_ticket_orders: {
+        Row: {
+          id: string
+          org_id: string
+          event_id: string
+          ticket_type_id: string | null
+          buyer_email: string
+          quantity: number
+          amount_cents: number
+          status: string
+          stripe_session_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          event_id: string
+          ticket_type_id?: string | null
+          buyer_email: string
+          quantity: number
+          amount_cents: number
+          status?: string
+          stripe_session_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          org_id?: string
+          event_id?: string
+          ticket_type_id?: string | null
+          buyer_email?: string
+          quantity?: number
+          amount_cents?: number
+          status?: string
+          stripe_session_id?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_ticket_orders_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_ticket_orders_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_ticket_orders_ticket_type_id_fkey"
+            columns: ["ticket_type_id"]
+            isOneToOne: false
+            referencedRelation: "event_ticket_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
