@@ -99,7 +99,7 @@ export default async function AdminOrdersPage() {
             </thead>
             <tbody>
               {orders.map((o) => {
-                const statusStyle = STATUS_COLORS[o.status] ?? STATUS_COLORS.pending;
+                const statusStyle = STATUS_COLORS[o.status] ?? STATUS_COLORS["pending"]!;
                 return (
                   <tr key={o.id} style={{ borderBottom: "1px solid #f9fafb" }}>
                     <td style={{ padding: "0.875rem 1rem", fontWeight: 600 }}>
