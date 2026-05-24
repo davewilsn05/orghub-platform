@@ -530,6 +530,9 @@ export type Database = {
           primary_color: string | null
           secondary_color: string | null
           slug: string
+          stripe_publishable_key: string | null
+          stripe_secret_key: string | null
+          stripe_webhook_secret: string | null
           updated_at: string
         }
         Insert: {
@@ -552,6 +555,9 @@ export type Database = {
           primary_color?: string | null
           secondary_color?: string | null
           slug: string
+          stripe_publishable_key?: string | null
+          stripe_secret_key?: string | null
+          stripe_webhook_secret?: string | null
           updated_at?: string
         }
         Update: {
@@ -574,6 +580,9 @@ export type Database = {
           primary_color?: string | null
           secondary_color?: string | null
           slug?: string
+          stripe_publishable_key?: string | null
+          stripe_secret_key?: string | null
+          stripe_webhook_secret?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -582,6 +591,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          dues_paid_through: string | null
           email: string
           full_name: string | null
           id: string
@@ -590,11 +600,13 @@ export type Database = {
           org_id: string
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          stripe_customer_id: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          dues_paid_through?: string | null
           email: string
           full_name?: string | null
           id: string
@@ -603,11 +615,13 @@ export type Database = {
           org_id: string
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          dues_paid_through?: string | null
           email?: string
           full_name?: string | null
           id?: string
@@ -616,6 +630,7 @@ export type Database = {
           org_id?: string
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -738,6 +753,9 @@ export type Database = {
           price_cents: number
           quantity_total: number | null
           quantity_sold: number
+          quantity_available: number | null
+          stripe_price_id: string | null
+          is_active: boolean
           created_at: string
         }
         Insert: {
@@ -749,6 +767,9 @@ export type Database = {
           price_cents: number
           quantity_total?: number | null
           quantity_sold?: number
+          quantity_available?: number | null
+          stripe_price_id?: string | null
+          is_active?: boolean
           created_at?: string
         }
         Update: {
@@ -760,6 +781,9 @@ export type Database = {
           price_cents?: number
           quantity_total?: number | null
           quantity_sold?: number
+          quantity_available?: number | null
+          stripe_price_id?: string | null
+          is_active?: boolean
           created_at?: string
         }
         Relationships: [
@@ -779,12 +803,115 @@ export type Database = {
           },
         ]
       }
+      membership_plans: {
+        Row: {
+          id: string
+          org_id: string
+          name: string
+          description: string | null
+          price_cents: number
+          interval: string
+          stripe_price_id: string | null
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          name: string
+          description?: string | null
+          price_cents: number
+          interval: string
+          stripe_price_id?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          org_id?: string
+          name?: string
+          description?: string | null
+          price_cents?: number
+          interval?: string
+          stripe_price_id?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_plans_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      membership_subscriptions: {
+        Row: {
+          id: string
+          org_id: string
+          profile_id: string
+          plan_id: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          status: string
+          current_period_end: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          profile_id: string
+          plan_id: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          status?: string
+          current_period_end?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          org_id?: string
+          profile_id?: string
+          plan_id?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          status?: string
+          current_period_end?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_subscriptions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_subscriptions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "membership_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_ticket_orders: {
         Row: {
           id: string
           org_id: string
           event_id: string
           ticket_type_id: string | null
+          profile_id: string | null
           buyer_email: string
           quantity: number
           amount_cents: number
@@ -797,6 +924,7 @@ export type Database = {
           org_id: string
           event_id: string
           ticket_type_id?: string | null
+          profile_id?: string | null
           buyer_email: string
           quantity: number
           amount_cents: number
@@ -809,6 +937,7 @@ export type Database = {
           org_id?: string
           event_id?: string
           ticket_type_id?: string | null
+          profile_id?: string | null
           buyer_email?: string
           quantity?: number
           amount_cents?: number

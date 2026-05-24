@@ -160,7 +160,8 @@ async function handleInvoicePaid(
   service: ReturnType<typeof createServiceClient>,
   invoice: Stripe.Invoice
 ) {
-  const subId = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id;
+  const sub$ = invoice.parent?.subscription_details?.subscription;
+  const subId = typeof sub$ === "string" ? sub$ : sub$?.id;
   if (!subId) return;
 
   const { data: sub } = await service

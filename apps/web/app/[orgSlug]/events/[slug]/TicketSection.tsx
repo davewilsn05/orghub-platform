@@ -24,7 +24,7 @@ export function TicketSection({ eventId }: { eventId: string }) {
       .then((json: { types: TicketType[] }) => {
         const withStripe = json.types.filter((t) => t.stripe_price_id);
         setTypes(withStripe);
-        if (withStripe.length > 0) setSelected(withStripe[0].id);
+        if (withStripe.length > 0) setSelected(withStripe[0]!.id);
       })
       .catch(() => { setError("Failed to load ticket information."); })
       .finally(() => setLoading(false));
@@ -42,7 +42,7 @@ export function TicketSection({ eventId }: { eventId: string }) {
   }
   if (types.length === 0) return null;
 
-  const selectedType = types.find((t) => t.id === selected) ?? types[0];
+  const selectedType = types.find((t) => t.id === selected) ?? types[0]!;
   const totalCents = selectedType.price_cents * quantity;
   const atMax = selectedType.quantity_available !== null && quantity >= selectedType.quantity_available;
 

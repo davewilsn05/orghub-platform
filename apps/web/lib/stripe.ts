@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 
-const API_VERSION = "2024-06-20" as const;
+const API_VERSION = "2026-01-28.clover" as const;
 
 /**
  * Returns a Stripe instance using the given secret key.
