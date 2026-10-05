@@ -52,6 +52,7 @@ export default async function AdminEventsPage({ params }: Props) {
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
           <a
             href="/api/admin/events/export"
+            download
             style={{
               padding: "0.6rem 1.1rem", background: "#f3f4f6",
               border: "1px solid #e5e7eb", borderRadius: "8px",

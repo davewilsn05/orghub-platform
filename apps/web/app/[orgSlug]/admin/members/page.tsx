@@ -40,6 +40,7 @@ export default async function AdminMembersPage({ params }: Props) {
         </div>
         <a
           href="/api/admin/members/export"
+          download
           style={{
             padding: "0.6rem 1.25rem", background: "#f3f4f6",
             border: "1px solid #e5e7eb", borderRadius: "8px",

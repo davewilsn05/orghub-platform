@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { loadOrgConfig } from "@/lib/org/loader";
 import { LoginForm } from "./LoginForm";
 import { redirect } from "next/navigation";
@@ -75,9 +76,9 @@ export default async function LoginPage({ params, searchParams }: Props) {
           redirectTo={redirectTo}
         />
         <div style={{ textAlign: "center", marginTop: "1rem" }}>
-          <a href="/privacy" style={{ color: "#9ca3af", fontSize: "0.75rem" }}>
+          <Link href="/privacy" style={{ color: "#9ca3af", fontSize: "0.75rem" }}>
             Privacy Policy
-          </a>
+          </Link>
         </div>
       </div>
     </div>

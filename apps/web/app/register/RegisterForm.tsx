@@ -90,7 +90,7 @@ export function RegisterForm() {
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <h2 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0 }}>Create your account</h2>
             <p style={{ color: "#6b7280", fontSize: "0.9rem", margin: 0 }}>
-              You'll be the admin for your organization's portal.
+              You&apos;ll be the admin for your organization&apos;s portal.
             </p>
             <div>
               <label style={labelStyle}>Your name</label>

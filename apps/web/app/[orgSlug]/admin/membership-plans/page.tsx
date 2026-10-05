@@ -117,7 +117,7 @@ export default function MembershipPlansPage() {
 
       {undoDeactivate && (
         <div style={{ padding: "0.75rem 1rem", background: "#fef3c7", border: "1px solid #fde68a", borderRadius: "8px", color: "#92400e", fontSize: "0.875rem", marginBottom: "1rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span>"{undoDeactivate.name}" deactivated.</span>
+          <span>&quot;{undoDeactivate.name}&quot; deactivated.</span>
           <button onClick={() => handleUndoDeactivate(undoDeactivate.id)} style={{ background: "none", border: "1px solid #d97706", borderRadius: "6px", cursor: "pointer", color: "#92400e", fontWeight: 700, fontSize: "0.8rem", padding: "0.2rem 0.6rem" }}>Undo</button>
         </div>
       )}

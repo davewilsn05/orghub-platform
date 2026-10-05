@@ -13,7 +13,7 @@
     "@orghub/db": "workspace:*",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.0",
-    "next": "^15.5.21",
+    "next": "15.5.27",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -22,7 +22,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
-    "eslint-config-next": "^15.5.21",
+    "eslint-config-next": "15.5.27",
     "typescript": "^5.6.0"
   }
 }

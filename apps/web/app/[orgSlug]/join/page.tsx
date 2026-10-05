@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { loadOrgConfig } from "@/lib/org/loader";
 import { createServiceClient } from "@/lib/supabase/server";
@@ -64,7 +65,7 @@ export default async function JoinPage({ params, searchParams }: Props) {
         </div>
         <p style={{ textAlign: "center", marginTop: "1.25rem", fontSize: "0.82rem", color: "#9ca3af" }}>
           Already have an account?{" "}
-          <a href={`/${orgSlug}/login`} style={{ color: "var(--org-primary, #3b82f6)" }}>Sign in</a>
+          <Link href={`/${orgSlug}/login`} style={{ color: "var(--org-primary, #3b82f6)" }}>Sign in</Link>
         </p>
       </div>
     </div>
@@ -81,13 +82,13 @@ function InviteError({ message, orgName }: { message: string; orgName: string })
         <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🔗</div>
         <h1 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>Invalid invite</h1>
         <p style={{ color: "#6b7280", marginBottom: "1.5rem" }}>{message}</p>
-        <a href="/" style={{
+        <Link href="/" style={{
           display: "inline-block", padding: "0.65rem 1.25rem",
           background: "var(--org-primary, #3b82f6)", color: "#fff",
           borderRadius: "8px", textDecoration: "none", fontWeight: 600, fontSize: "0.875rem",
         }}>
           Go to {orgName}
-        </a>
+        </Link>
       </div>
     </div>
   );

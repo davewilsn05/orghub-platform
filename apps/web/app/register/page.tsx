@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { RegisterForm } from "./RegisterForm";
 
 export const metadata = { title: "Create your portal — OrgHub" };
@@ -16,11 +17,11 @@ export default function RegisterPage() {
       fontFamily: "system-ui, -apple-system, sans-serif",
     }}>
       {/* Header */}
-      <a href="/" style={{ textDecoration: "none", marginBottom: "2.5rem" }}>
+      <Link href="/" style={{ textDecoration: "none", marginBottom: "2.5rem" }}>
         <span style={{ fontWeight: 800, fontSize: "1.5rem", letterSpacing: "-0.02em", color: "#f5f5f5" }}>
           Org<span style={{ color: "#3b82f6" }}>Hub</span>
         </span>
-      </a>
+      </Link>
 
       {/* Card */}
       <div style={{
@@ -37,10 +38,10 @@ export default function RegisterPage() {
 
       <p style={{ marginTop: "1.5rem", color: "#555", fontSize: "0.85rem" }}>
         Already have a portal?{" "}
-        <a href="/" style={{ color: "#3b82f6" }}>Back to home</a>
+        <Link href="/" style={{ color: "#3b82f6" }}>Back to home</Link>
       </p>
       <p style={{ marginTop: "0.5rem", color: "#555", fontSize: "0.75rem" }}>
-        <a href="/privacy" style={{ color: "#888" }}>Privacy Policy</a>
+        <Link href="/privacy" style={{ color: "#888" }}>Privacy Policy</Link>
       </p>
     </div>
   );

@@ -252,13 +252,13 @@ function DashboardMockup() {
           }}>
             <div style={{ fontSize: "0.65rem", color: "#818cf8", fontWeight: 700, marginBottom: "0.35rem" }}>✦ AI Assistant</div>
             <div style={{ fontSize: "0.65rem", color: "#555", lineHeight: 1.5 }}>
-              "Draft an announcement for the March scholarship dinner…"
+              &quot;Draft an announcement for the March scholarship dinner…&quot;
             </div>
             <div style={{
               marginTop: "0.5rem", background: "#312e81", borderRadius: "6px",
               padding: "0.25rem 0.5rem", fontSize: "0.6rem", color: "#a5b4fc",
             }}>
-              Sure! Here's a draft: The Pasadena Elks Lodge #672 is pleased to invite…
+              Sure! Here&apos;s a draft: The Pasadena Elks Lodge #672 is pleased to invite…
             </div>
           </div>
           <div style={{
@@ -395,7 +395,7 @@ function AiSpotlight() {
             AI-powered admin tools
           </div>
           <h2 style={{ ...sectionHeading, maxWidth: "640px", margin: "0 auto 1rem" }}>
-            Your org's work just got a lot{" "}
+            Your org&apos;s work just got a lot{" "}
             <span style={{ color: "#a78bfa" }}>faster</span>
           </h2>
           <p style={{ ...sectionSubtext, maxWidth: "540px", margin: "0 auto" }}>
@@ -443,14 +443,14 @@ function AiSpotlight() {
             </div>
             <div style={{ alignSelf: "flex-start", background: "#1a1635", color: "#b8aee0", borderRadius: "12px 12px 12px 2px", padding: "0.6rem 0.9rem", fontSize: "0.8rem", maxWidth: "90%", lineHeight: 1.6 }}>
               <span style={{ color: "#818cf8", fontWeight: 700 }}>✦</span>{"  "}
-              You're invited to the <strong style={{ color: "#e0d9ff" }}>Annual Scholarship Dinner</strong> hosted by Pasadena Elks Lodge #672 — Friday, March 21st at 6:00 PM in the Banquet Room. Join us for an evening honoring our scholarship recipients and celebrating our community's commitment to education. RSVP in the portal by March 15th.
+              You&apos;re invited to the <strong style={{ color: "#e0d9ff" }}>Annual Scholarship Dinner</strong> hosted by Pasadena Elks Lodge #672 — Friday, March 21st at 6:00 PM in the Banquet Room. Join us for an evening honoring our scholarship recipients and celebrating our community&apos;s commitment to education. RSVP in the portal by March 15th.
             </div>
             <div style={{ alignSelf: "flex-end", background: "#312e81", color: "#e0d9ff", borderRadius: "12px 12px 2px 12px", padding: "0.6rem 0.9rem", fontSize: "0.8rem", maxWidth: "85%" }}>
               Make it a bit more casual.
             </div>
             <div style={{ alignSelf: "flex-start", background: "#1a1635", color: "#b8aee0", borderRadius: "12px 12px 12px 2px", padding: "0.6rem 0.9rem", fontSize: "0.8rem", maxWidth: "90%", lineHeight: 1.6 }}>
               <span style={{ color: "#818cf8", fontWeight: 700 }}>✦</span>{"  "}
-              Hey everyone — our <strong style={{ color: "#e0d9ff" }}>Scholarship Dinner</strong> is coming up on Friday, March 21st at 6 PM in the Banquet Room. Come celebrate the amazing students we're supporting this year. RSVP in the portal by March 15th — hope to see you there!
+              Hey everyone — our <strong style={{ color: "#e0d9ff" }}>Scholarship Dinner</strong> is coming up on Friday, March 21st at 6 PM in the Banquet Room. Come celebrate the amazing students we&apos;re supporting this year. RSVP in the portal by March 15th — hope to see you there!
             </div>
           </div>
           {/* Input */}
