@@ -42,3 +42,11 @@ Replace the override with an official compatible patched release when available,
 keeping the behavioral tests. Do not remove the override merely because the
 renamed package does not appear in npm's advisory database.
 
+
+## Source maps and document parsing
+
+The source-map-js 1.2.2 override fixes GHSA-68fv-2mgg-jv7q. Mammoth now uses
+argparse 2.0.1 to remove the unpatched sprintf-js dependency (GHSA-hp3w-g68c-fv3c).
+Its XML parser stays on the patched, compatible xmldom 0.8.15 release; the prior
+open-ended override incorrectly selected the incompatible 0.9 API. Real DOCX
+extraction and CLI help, format and output tests verify the supported behavior.
