@@ -4,7 +4,10 @@ import {createHash} from 'node:crypto';
 import {existsSync,readFileSync,readdirSync,realpathSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import {join} from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath,URL} from 'node:url';
+import {Buffer} from 'node:buffer';
+import process from 'node:process';
+import {setTimeout} from 'node:timers';
 import test from 'node:test';
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const require=createRequire(import.meta.url);
@@ -14,8 +17,13 @@ function installed(name){
   if(path===`node_modules/${name}`||path.endsWith(`/node_modules/${name}`))paths.push(join(root,path));
  }
  const store=join(root,'node_modules/.pnpm');
- if(existsSync(store))for(const nameAndVersion of readdirSync(store)){
-  if(nameAndVersion.startsWith(name+'@'))paths.push(join(store,nameAndVersion,'node_modules',name));
+ if(existsSync(store)){
+  const lockText=readFileSync(join(root,'pnpm-lock.yaml'),'utf8');
+  const active=new Set([...lockText.matchAll(new RegExp('^  [\'"]?'+name+'@(\\d+\\.\\d+\\.\\d+)','gm'))].map(match=>match[1]));
+  for(const nameAndVersion of readdirSync(store)){
+   const version=nameAndVersion.slice(name.length+1).split('_')[0];
+   if(nameAndVersion.startsWith(name+'@')&&active.has(version))paths.push(join(store,nameAndVersion,'node_modules',name));
+  }
  }
  return [...new Set(paths.filter(existsSync).map(path=>realpathSync(path)))];
 }
@@ -57,7 +65,7 @@ for(const path of installed('glob')){
   const [major,minor,patch]=version.split('.').map(Number);
   assert.ok(major>14||(major===14&&(minor>0||patch>=2)),`Unpatched glob ${version}`);
   const glob=require(path);const fs=require('node:fs');let reads=0;
-  const controller=new AbortController();controller.abort(new Error('audit-probe-abort'));
+  const controller=new globalThis.AbortController();controller.abort(new Error('audit-probe-abort'));
   const filesystem={...fs,readdir(...args){reads++;return fs.readdir(...args);},readdirSync(...args){reads++;return fs.readdirSync(...args);}};
   await assert.rejects(glob.glob('**/*',{cwd:root,signal:controller.signal,fs:filesystem}),/audit-probe-abort/);
   await new Promise(resolve=>setTimeout(resolve,25));assert.equal(reads,0);
